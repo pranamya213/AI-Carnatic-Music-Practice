@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section immersive-hero" style="background: linear-gradient(to right, rgba(26,15,10,1.0) 0%, rgba(26,15,10,0.85) 45%, rgba(26,15,10,0.1) 100%), url('{{ url_for('static', filename='images/hero_bg_immersive.jpg') }}') no-repeat right center / cover;">
+    <div class="container" style="position: relative; z-index: 2;">
+        <div class="row align-items-center">
+            <div class="col-lg-7 col-xl-6 mb-5 mb-lg-0">
+                <h1 class="display-3 mb-3 lh-sm fw-bold">
+                    <span class="text-cream serif-font d-block">Perfect Your</span>
+                    <span class="text-gold serif-font">Swara</span> 
+                    <span class="text-cream serif-font">&amp;</span> 
+                    <span class="text-terracotta serif-font">Laya</span>
+                </h1>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div style="height: 2px; width: 60px; background: var(--antique-gold); opacity: 0.8;"></div>
+                    <span class="text-gold mx-3 fs-4">&#10043;</span>
+                    <div style="height: 2px; width: 60px; background: var(--antique-gold); opacity: 0.8;"></div>
+                </div>
+
+                <p class="lead mb-5 fs-5" style="color: #f4eadd; opacity: 0.9; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                    A teacher-guided AI platform for Carnatic music students. Practice with digital tanpura, reference recordings, and get measurable feedback on your pitch and timing.
+                </p>
+                
+                <div class="d-flex flex-wrap gap-4">
+                    <a href="#" class="btn btn-primary-hero">Start Practicing</a>
+                    <a href="#" class="btn btn-outline-hero">Learn More</a>
+                </div>
+            </div>
+            <!-- Removed the right column image card so the background shines through -->
+        </div>
+    </div>
+    <!-- Decorative bottom wave/divider -->
+    <div class="hero-bottom-divider">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V120H0Z" fill="rgba(26,15,10,0.8)"></path>
+            <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V120H0Z" fill="rgba(26,15,10,1)"></path>
+        </svg>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-dark-gradient">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="mb-2">The Practice Flow</h2>
+            <div class="ornament-divider"></div>
+        </div>
+        
+        <div class="row g-4 justify-content-center text-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card h-100 p-4 hover-lift">
+                    <h2 class="text-gold mb-3 serif-font">I</h2>
+                    <h5 class="mb-3 text-cream">Listen</h5>
+                    <p class="text-muted-custom small mb-0">Select your comfortable shruti and absorb the teacher's reference over the digital tanpura.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card h-100 p-4 hover-lift">
+                    <h2 class="text-gold mb-3 serif-font">II</h2>
+                    <h5 class="mb-3 text-cream">Practice</h5>
+                    <p class="text-muted-custom small mb-0">Sing along with visual swara cues and precise tala beat references to guide you.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card h-100 p-4 hover-lift">
+                    <h2 class="text-terracotta mb-3 serif-font">III</h2>
+                    <h5 class="mb-3 text-cream">Analyze</h5>
+                    <p class="text-muted-custom small mb-0">Receive measurable scores on pitch accuracy and tempo consistency compared to the reference.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="glass-card h-100 p-4 hover-lift">
+                    <h2 class="text-gold mb-3 serif-font">IV</h2>
+                    <h5 class="mb-3 text-cream">Review</h5>
+                    <p class="text-muted-custom small mb-0">Your progress is preserved in a detailed history for your guru to review and guide your next steps.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Teacher Guided Approach Section -->
+<section class="py-5 bg-maroon-gradient">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-5 mb-lg-0">
+                <div class="glass-card text-center py-5 hover-lift">
+                    <h3 class="text-gold serif-font mb-3">Guru-Shishya Parampara</h3>
+                    <div class="ornament-divider"></div>
+                    <p class="mb-0 text-cream mt-3 fs-5">Enhanced by Modern Technology</p>
+                </div>
+            </div>
+            <div class="col-lg-6 offset-lg-1">
+                <h2 class="mb-3">A Teacher-Guided Approach</h2>
+                <div class="ornament-divider-left"></div>
+                <p class="mb-4 text-muted-custom fs-5">
+                    This platform honors the guru. It empowers the student to practice flawlessly between classes. We focus on measurable aspects—leaving bhava, complex gamakas, and manodharma entirely to the teacher's expertise.
+                </p>
+                <ul class="list-unstyled mt-4">
+                    <li class="mb-4 d-flex align-items-start gap-3 glass-card p-3" style="border-radius: 8px;">
+                        <span class="text-gold fs-4 lh-1">&#10022;</span>
+                        <span class="text-cream">Relative pitch analysis normalizes to the student's comfortable Shruti.</span>
+                    </li>
+                    <li class="mb-4 d-flex align-items-start gap-3 glass-card p-3" style="border-radius: 8px;">
+                        <span class="text-gold fs-4 lh-1">&#10022;</span>
+                        <span class="text-cream">Teachers easily upload custom reference recordings and metadata.</span>
+                    </li>
+                    <li class="d-flex align-items-start gap-3 glass-card p-3" style="border-radius: 8px;">
+                        <span class="text-gold fs-4 lh-1">&#10022;</span>
+                        <span class="text-cream">Detailed progress history informs the teacher's next lesson plan.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
