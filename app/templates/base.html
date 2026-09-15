@@ -33,9 +33,21 @@
                     <li class="nav-item">
                         <a class="nav-link text-cream nav-hover-gold" href="#">For Teachers</a>
                     </li>
+                    {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link text-gold" href="#">Login</a>
+                        <a class="nav-link text-gold" href="{% if current_user.role == 'student' %}{{ url_for('dashboard.student') }}{% elif current_user.role == 'teacher' %}{{ url_for('dashboard.teacher') }}{% else %}{{ url_for('dashboard.admin') }}{% endif %}">Dashboard</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-cream nav-hover-gold" href="{{ url_for('auth.logout') }}">Logout</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link text-cream nav-hover-gold" href="{{ url_for('auth.register') }}">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-gold" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -43,6 +55,18 @@
 
     <!-- Main Content -->
     <main>
+        <div class="container mt-5 pt-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert" style="z-index: 1050; position: relative; border-radius: 8px; border: 1px solid var(--antique-gold);">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
         {% block content %}{% endblock %}
     </main>
 

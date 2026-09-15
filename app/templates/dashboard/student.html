@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="dashboard-section py-5" style="min-height: 100vh; background: linear-gradient(to bottom, rgba(26,15,10,1) 0%, rgba(45,20,15,1) 100%);">
+    <div class="container pt-4">
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="text-cream serif-font">Welcome, <span class="text-gold">{{ current_user.name }}</span></h2>
+                <div class="ornament-divider-left mb-3"></div>
+                <p class="text-muted-custom fs-5">Student Dashboard</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-gold fs-3 me-3">&#9835;</span>
+                        <h4 class="text-cream mb-0">Practice</h4>
+                    </div>
+                    <p class="text-muted-custom">Start a new guided practice session with your digital tanpura and real-time feedback.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-3">Start Practicing</a>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-gold fs-3 me-3">&#10043;</span>
+                        <h4 class="text-cream mb-0">Lessons</h4>
+                    </div>
+                    <p class="text-muted-custom">View reference recordings and instructions assigned by your Guru.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-3">View Lessons</a>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-gold fs-3 me-3">&#9651;</span>
+                        <h4 class="text-cream mb-0">Progress</h4>
+                    </div>
+                    <p class="text-muted-custom">Review your past performances, pitch accuracy, and laya scores.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-3">View History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

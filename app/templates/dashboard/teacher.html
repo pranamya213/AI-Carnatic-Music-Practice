@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Teacher Dashboard - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="dashboard-section py-5" style="min-height: 100vh; background: linear-gradient(to bottom, rgba(26,15,10,1) 0%, rgba(45,20,15,1) 100%);">
+    <div class="container pt-4">
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="text-cream serif-font">Welcome, <span class="text-gold">{{ current_user.name }}</span></h2>
+                <div class="ornament-divider-left mb-3"></div>
+                <p class="text-muted-custom fs-5">Guru Dashboard</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="text-center mb-3">
+                        <span class="text-gold fs-2">&#10022;</span>
+                        <h4 class="text-cream mt-2">Lessons</h4>
+                    </div>
+                    <p class="text-muted-custom text-center small">Create and manage practice lessons for your students.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-2">Manage</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="text-center mb-3">
+                        <span class="text-gold fs-2">&#9835;</span>
+                        <h4 class="text-cream mt-2">Reference Audio</h4>
+                    </div>
+                    <p class="text-muted-custom text-center small">Upload your reference recordings and set shruti.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-2">Upload</a>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="text-center mb-3">
+                        <span class="text-gold fs-2">&#10043;</span>
+                        <h4 class="text-cream mt-2">Students</h4>
+                    </div>
+                    <p class="text-muted-custom text-center small">Manage your students and their assigned materials.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-2">View Students</a>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="glass-card p-4 h-100 hover-lift">
+                    <div class="text-center mb-3">
+                        <span class="text-gold fs-2">&#9651;</span>
+                        <h4 class="text-cream mt-2">Performance</h4>
+                    </div>
+                    <p class="text-muted-custom text-center small">Review automated feedback on student recordings.</p>
+                    <a href="#" class="btn btn-outline-hero w-100 mt-2">Review</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

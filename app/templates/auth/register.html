@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Register - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="auth-section d-flex align-items-center" style="min-height: 100vh; background: linear-gradient(to left, rgba(26,15,10,0.95) 0%, rgba(26,15,10,0.7) 100%), url('{{ url_for('static', filename='images/hero_bg_immersive.jpg') }}') no-repeat center center / cover;">
+    <div class="container pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="text-center mb-4">
+                    <h2 class="text-cream mt-2 serif-font">Create Your CarnaticAI Account</h2>
+                    <p class="text-muted-custom">Begin your guided practice journey</p>
+                </div>
+                
+                <div class="glass-card p-4 p-md-5 hover-lift">
+                    <form method="POST" action="{{ url_for('auth.register') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label text-cream">Full Name</label>
+                            <input type="text" class="form-control glass-input" id="name" name="name" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-cream">Email Address</label>
+                            <input type="email" class="form-control glass-input" id="email" name="email" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label text-cream">Password</label>
+                                <input type="password" class="form-control glass-input" id="password" name="password" required>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="confirm_password" class="form-label text-cream">Confirm Password</label>
+                                <input type="password" class="form-control glass-input" id="confirm_password" name="confirm_password" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-cream d-block">Role</label>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="role" id="roleStudent" value="student" checked>
+                                <label class="form-check-label text-cream" for="roleStudent">Student</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="role" id="roleTeacher" value="teacher">
+                                <label class="form-check-label text-cream" for="roleTeacher">Teacher</label>
+                            </div>
+                        </div>
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary-hero py-2 fs-5">Create Account</button>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-muted-custom">Already have an account? </span>
+                            <a href="{{ url_for('auth.login') }}" class="text-gold text-decoration-none nav-hover-gold">Login</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
