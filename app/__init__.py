@@ -16,6 +16,12 @@ def create_app(config_name='development'):
         os.makedirs(app.instance_path)
     except OSError:
         pass
+        
+    # Ensure the upload folder exists
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    except OSError:
+        pass
     
     # Initialize extensions
     from app.extensions import db, login_manager

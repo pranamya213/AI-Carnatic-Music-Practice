@@ -13,6 +13,87 @@
             </div>
         </div>
 
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="glass-card p-4">
+                    <h3 class="text-cream serif-font mb-3">My Teacher(s)</h3>
+                    {% set teachers = current_user.teachers.all() %}
+                    {% if teachers %}
+                        <ul class="list-unstyled mb-4">
+                        {% for teacher in teachers %}
+                            <li class="mb-2 pb-2 border-bottom border-gold-muted" style="border-bottom-color: rgba(212, 175, 55, 0.2) !important;">
+                                <span class="text-cream">&#10043; {{ teacher.name }}</span>
+                                <span class="text-muted-custom small ms-2">({{ teacher.teacher_code }})</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted-custom mb-4">No teacher connected yet. Connect with your teacher to access assigned practice lessons.</p>
+                    {% endif %}
+                    
+                    <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.3);">
+                        <h5 class="text-gold mb-3">Connect with your Teacher</h5>
+                        <form method="POST" action="{{ url_for('dashboard.student') }}" class="row g-3 align-items-center">
+                            <div class="col-auto">
+                                <label for="teacher_code" class="visually-hidden">Teacher Code</label>
+                                <input type="text" class="form-control bg-dark text-cream border-gold-muted" id="teacher_code" name="teacher_code" placeholder="e.g. TCH-1234" required>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-hero">Connect</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="text-cream serif-font mb-0">Available Lessons</h3>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% if not current_user.teachers.all() %}
+                <div class="col-12">
+                    <div class="glass-card p-5 text-center">
+                        <p class="text-muted-custom mb-0">No teacher connected yet. Connect with your teacher to access assigned practice lessons.</p>
+                    </div>
+                </div>
+            {% elif lessons %}
+                {% for lesson in lessons %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 hover-lift d-flex flex-column">
+                        <div class="mb-3">
+                            <h4 class="text-cream mb-1">{{ lesson.title }}</h4>
+                            <div class="text-gold small mb-3">{{ lesson.raga }}</div>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Tala: {{ lesson.tala }}</span>
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Laya: {{ lesson.laya }}</span>
+                            </div>
+                            <p class="text-muted-custom small mb-0">By: {{ lesson.teacher.name }}</p>
+                        </div>
+                        <div class="mt-auto pt-3 border-top border-gold-muted">
+                            <a href="{{ url_for('dashboard.student_lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-hero w-100">View Lesson</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="glass-card p-5 text-center">
+                        <p class="text-muted-custom mb-0">Your teacher hasn't published any lessons yet.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="text-cream serif-font mb-0">Quick Actions</h3>
+            </div>
+        </div>
+
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="glass-card p-4 h-100 hover-lift">

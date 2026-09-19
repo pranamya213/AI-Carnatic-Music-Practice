@@ -12,6 +12,82 @@
                 <p class="text-muted-custom fs-5">Guru Dashboard</p>
             </div>
         </div>
+        <div class="row mb-5">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <div class="glass-card p-4 h-100">
+                    <h3 class="text-cream serif-font mb-3">My Teacher Code</h3>
+                    <div class="p-3 border border-gold-muted rounded text-center" style="background: rgba(0,0,0,0.3);">
+                        <span class="text-gold fs-3 font-monospace d-block mb-2">{{ current_user.teacher_code }}</span>
+                        <p class="text-muted-custom small mb-0">Share this code with your students so they can connect with you.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glass-card p-4 h-100">
+                    <h3 class="text-cream serif-font mb-3">My Students</h3>
+                    {% if students %}
+                        <ul class="list-unstyled mb-0">
+                        {% for student in students %}
+                            <li class="mb-2 pb-2 border-bottom border-gold-muted" style="border-bottom-color: rgba(212, 175, 55, 0.2) !important;">
+                                <span class="text-cream">&#10043; {{ student.name }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted-custom mb-0">No students connected yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-5">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <h3 class="text-cream serif-font mb-0">My Lessons</h3>
+                <a href="{{ url_for('dashboard.create_lesson') }}" class="btn btn-hero">Create New Lesson</a>
+            </div>
+        </div>
+        
+        <div class="row g-4 mb-5">
+            {% if lessons %}
+                {% for lesson in lessons %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 hover-lift d-flex flex-column">
+                        <div class="mb-3">
+                            <h4 class="text-cream mb-1">{{ lesson.title }}</h4>
+                            <div class="text-gold small mb-3">{{ lesson.raga }}</div>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Tala: {{ lesson.tala }}</span>
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Laya: {{ lesson.laya }}</span>
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Shruti: {{ lesson.shruti }}</span>
+                            </div>
+                        </div>
+                        <div class="mt-auto pt-3 border-top border-gold-muted d-flex justify-content-between">
+                            <a href="{{ url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-hero">View</a>
+                            <div>
+                                <a href="{{ url_for('dashboard.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-light me-1">Edit</a>
+                                <form action="{{ url_for('dashboard.delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this lesson?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="glass-card p-5 text-center">
+                        <p class="text-muted-custom mb-3">You haven't created any lessons yet.</p>
+                        <a href="{{ url_for('dashboard.create_lesson') }}" class="btn btn-outline-hero">Create Your First Lesson</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="text-cream serif-font mb-0">Quick Actions</h3>
+            </div>
+        </div>
 
         <div class="row g-4">
             <div class="col-md-6 col-lg-3">
@@ -21,7 +97,7 @@
                         <h4 class="text-cream mt-2">Lessons</h4>
                     </div>
                     <p class="text-muted-custom text-center small">Create and manage practice lessons for your students.</p>
-                    <a href="#" class="btn btn-outline-hero w-100 mt-2">Manage</a>
+                    <a href="{{ url_for('dashboard.create_lesson') }}" class="btn btn-outline-hero w-100 mt-2">Manage</a>
                 </div>
             </div>
             
@@ -32,7 +108,7 @@
                         <h4 class="text-cream mt-2">Reference Audio</h4>
                     </div>
                     <p class="text-muted-custom text-center small">Upload your reference recordings and set shruti.</p>
-                    <a href="#" class="btn btn-outline-hero w-100 mt-2">Upload</a>
+                    <a href="{{ url_for('dashboard.create_lesson') }}" class="btn btn-outline-hero w-100 mt-2">Upload</a>
                 </div>
             </div>
             

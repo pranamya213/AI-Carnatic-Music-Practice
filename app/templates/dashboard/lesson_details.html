@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="py-5" style="min-height: 100vh; background: linear-gradient(to bottom, rgba(26,15,10,1) 0%, rgba(45,20,15,1) 100%);">
+    <div class="container pt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{{ url_for('dashboard.teacher' if is_teacher else 'dashboard.student') }}" class="btn btn-outline-light mb-3">&larr; Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="glass-card p-4 p-md-5">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="text-cream serif-font mb-2">{{ lesson.title }}</h2>
+                            <p class="text-gold mb-0">Raga: {{ lesson.raga }}</p>
+                        </div>
+                        {% if is_teacher %}
+                        <div>
+                            <a href="{{ url_for('dashboard.edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-light">Edit</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="ornament-divider-left mb-4"></div>
+
+                    <div class="row mb-5">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="p-3 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                                <span class="text-muted-custom small d-block mb-1">Tala</span>
+                                <span class="text-cream fs-5">{{ lesson.tala }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="p-3 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                                <span class="text-muted-custom small d-block mb-1">Laya</span>
+                                <span class="text-cream fs-5">{{ lesson.laya }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                                <span class="text-muted-custom small d-block mb-1">Shruti</span>
+                                <span class="text-cream fs-5">{{ lesson.shruti }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h4 class="text-gold mb-3">Description</h4>
+                        <div class="text-cream" style="white-space: pre-wrap;">{{ lesson.description }}</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="text-gold mb-3">Teacher Reference Recording</h4>
+                        <div class="p-4 border border-gold-muted rounded text-center" style="background: rgba(0,0,0,0.3);">
+                            {% if lesson.reference_audio_filename %}
+                                <div class="mb-3 text-cream">
+                                    <span class="fs-4 d-block mb-2">&#9835;</span>
+                                    <p class="mb-0">Listen to the reference recording before practicing.</p>
+                                </div>
+                                <audio controls class="w-100 mb-2 custom-audio-player">
+                                    <source src="{{ url_for('dashboard.uploaded_file', filename=lesson.reference_audio_filename) }}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            {% else %}
+                                <div class="py-4">
+                                    <p class="text-muted-custom mb-0">No reference recording available for this lesson.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if not is_teacher %}
+                    <div class="text-center mt-5">
+                        <button class="btn btn-hero btn-lg px-5">Start Practice Session (Coming Soon)</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Basic styling for the audio player to fit the dark theme slightly better */
+.custom-audio-player {
+    filter: invert(90%) hue-rotate(180deg);
+    border-radius: 5px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Lesson - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="py-5" style="min-height: 100vh; background: linear-gradient(to bottom, rgba(26,15,10,1) 0%, rgba(45,20,15,1) 100%);">
+    <div class="container pt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{{ url_for('dashboard.teacher') }}" class="btn btn-outline-light mb-3">&larr; Back to Dashboard</a>
+                <h2 class="text-cream serif-font">{{ action }} Lesson</h2>
+                <div class="ornament-divider-left mb-3"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="glass-card p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        
+                        <div class="mb-4">
+                            <label for="title" class="form-label text-gold">Lesson / Exercise Name</label>
+                            <input type="text" class="form-control bg-dark text-cream border-gold-muted" id="title" name="title" required
+                                   value="{{ lesson.title if lesson else '' }}" placeholder="e.g. Mayamalavagowla Sarali Varisai">
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <label for="raga" class="form-label text-gold">Raga</label>
+                                <input type="text" class="form-control bg-dark text-cream border-gold-muted" id="raga" name="raga" required
+                                       value="{{ lesson.raga if lesson else '' }}" placeholder="e.g. Mayamalavagowla">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="shruti" class="form-label text-gold">Shruti / Tonic</label>
+                                <select class="form-select bg-dark text-cream border-gold-muted" id="shruti" name="shruti" required>
+                                    <option value="" disabled {% if not lesson %}selected{% endif %}>Select Shruti</option>
+                                    {% for s in ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] %}
+                                    <option value="{{ s }}" {% if lesson and lesson.shruti == s %}selected{% endif %}>{{ s }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-4 mb-md-0">
+                                <label for="tala" class="form-label text-gold">Tala</label>
+                                <select class="form-select bg-dark text-cream border-gold-muted" id="tala" name="tala" required>
+                                    <option value="" disabled {% if not lesson %}selected{% endif %}>Select Tala</option>
+                                    {% for t in ['Adi Tala', 'Rupaka Tala', 'Triputa Tala', 'Jhampa Tala', 'Eka Tala'] %}
+                                    <option value="{{ t }}" {% if lesson and lesson.tala == t %}selected{% endif %}>{{ t }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="laya" class="form-label text-gold">Laya / Tempo</label>
+                                <select class="form-select bg-dark text-cream border-gold-muted" id="laya" name="laya" required>
+                                    <option value="" disabled {% if not lesson %}selected{% endif %}>Select Laya</option>
+                                    {% for l in ['Slow', 'Medium', 'Fast'] %}
+                                    <option value="{{ l }}" {% if lesson and lesson.laya == l %}selected{% endif %}>{{ l }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="description" class="form-label text-gold">Description</label>
+                            <textarea class="form-control bg-dark text-cream border-gold-muted" id="description" name="description" rows="4"
+                                      placeholder="Practice the given swara sequence using the reference recording.">{{ lesson.description if lesson else '' }}</textarea>
+                        </div>
+
+                        <div class="mb-5 p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                            <h5 class="text-cream mb-2">Reference Recording</h5>
+                            <p class="text-muted-custom small mb-3">Upload the recording you demonstrated during the lesson for students to practice with.</p>
+                            
+                            {% if lesson and lesson.reference_audio_filename %}
+                            <div class="mb-3">
+                                <span class="badge bg-success">Current File Uploaded</span>
+                                <p class="text-cream small mt-1">Leave empty to keep the existing file.</p>
+                            </div>
+                            {% endif %}
+                            
+                            <input class="form-control bg-dark text-cream border-gold-muted" type="file" id="reference_audio" name="reference_audio" accept=".wav,.mp3,.m4a" {% if not lesson %}required{% endif %}>
+                            <div class="form-text text-muted-custom">Allowed formats: WAV, MP3, M4A</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('dashboard.teacher') }}" class="btn btn-outline-light me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-hero">{{ action }} Lesson</button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="glass-card p-4">
+                    <h5 class="text-gold mb-3">&#9835; Teaching Tip</h5>
+                    <p class="text-cream small">
+                        Providing clear reference recordings helps students internalize the precise gamakas and shruti alignments required for the raga.
+                    </p>
+                    <p class="text-cream small mb-0">
+                        Ensure your recording environment is quiet and the tanpura is clearly audible in the background for best results.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
