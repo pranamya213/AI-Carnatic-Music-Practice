@@ -20,6 +20,15 @@ class Lesson(db.Model):
 
     description = db.Column(db.Text, nullable=True)
     reference_audio_filename = db.Column(db.String(255), nullable=True)
+    
+    # Phase 5: Audio Processing Metadata
+    audio_duration = db.Column(db.Float, nullable=True)
+    audio_original_sr = db.Column(db.Integer, nullable=True)
+    audio_analysis_sr = db.Column(db.Integer, nullable=True)
+    audio_channels = db.Column(db.Integer, nullable=True)
+    audio_waveform_filename = db.Column(db.String(255), nullable=True)
+    audio_processing_status = db.Column(db.String(50), default="Pending")
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

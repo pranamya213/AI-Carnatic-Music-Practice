@@ -6,6 +6,7 @@ from app.utilities.decorators import role_required
 from app.models.lesson import Lesson
 from app.models.user import User
 from app.extensions import db
+from app.services.audio_processor import process_reference_audio
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -131,6 +132,7 @@ def create_lesson():
                 flash('Invalid file format. Allowed formats: WAV, MP3, M4A.', 'danger')
                 return redirect(request.url)
         
+        
         new_lesson = Lesson(
             teacher_id=current_user.id,
             category=category,
@@ -144,6 +146,20 @@ def create_lesson():
             description=description,
             reference_audio_filename=filename
         )
+        
+        # Audio Processing
+        if filename:
+            try:
+                metadata = process_reference_audio(file_path, current_app.config['UPLOAD_FOLDER'], filename)
+                new_lesson.audio_duration = metadata['audio_duration']
+                new_lesson.audio_original_sr = metadata['audio_original_sr']
+                new_lesson.audio_analysis_sr = metadata['audio_analysis_sr']
+                new_lesson.audio_channels = metadata['audio_channels']
+                new_lesson.audio_waveform_filename = metadata['audio_waveform_filename']
+                new_lesson.audio_processing_status = metadata['audio_processing_status']
+            except Exception as e:
+                current_app.logger.error(f"Error processing audio for lesson: {e}")
+                new_lesson.audio_processing_status = "Failed"
         
         db.session.add(new_lesson)
         db.session.commit()
@@ -196,8 +212,29 @@ def edit_lesson(lesson_id):
                             os.remove(old_path)
                         except OSError:
                             pass
+                if lesson.audio_waveform_filename:
+                    old_wf_path = os.path.join(current_app.config['UPLOAD_FOLDER'], lesson.audio_waveform_filename)
+                    if os.path.exists(old_wf_path):
+                        try:
+                            os.remove(old_wf_path)
+                        except OSError:
+                            pass
                 
                 lesson.reference_audio_filename = filename
+                
+                # Audio Processing for new file
+                try:
+                    metadata = process_reference_audio(file_path, current_app.config['UPLOAD_FOLDER'], filename)
+                    lesson.audio_duration = metadata['audio_duration']
+                    lesson.audio_original_sr = metadata['audio_original_sr']
+                    lesson.audio_analysis_sr = metadata['audio_analysis_sr']
+                    lesson.audio_channels = metadata['audio_channels']
+                    lesson.audio_waveform_filename = metadata['audio_waveform_filename']
+                    lesson.audio_processing_status = metadata['audio_processing_status']
+                except Exception as e:
+                    current_app.logger.error(f"Error processing audio for lesson edit: {e}")
+                    lesson.audio_processing_status = "Failed"
+                    
             else:
                 flash('Invalid file format. Allowed formats: WAV, MP3, M4A.', 'danger')
                 return redirect(request.url)
