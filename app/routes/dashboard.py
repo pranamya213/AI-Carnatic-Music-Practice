@@ -36,10 +36,31 @@ def student():
     teacher_ids = [t.id for t in current_user.teachers]
     if teacher_ids:
         lessons = Lesson.query.filter(Lesson.teacher_id.in_(teacher_ids)).order_by(Lesson.created_at.desc()).all()
+        categories = {}
+        for lesson in lessons:
+            cat = lesson.category
+            if cat not in categories:
+                categories[cat] = 0
+            categories[cat] += 1
     else:
-        lessons = []
+        categories = {}
         
-    return render_template('dashboard/student.html', lessons=lessons)
+    return render_template('dashboard/student.html', categories=categories)
+
+@dashboard_bp.route('/student/lessons/category/<string:category>')
+@login_required
+@role_required('student')
+def student_category_lessons(category):
+    teacher_ids = [t.id for t in current_user.teachers]
+    if not teacher_ids:
+        return redirect(url_for('dashboard.student'))
+        
+    lessons = Lesson.query.filter(
+        Lesson.teacher_id.in_(teacher_ids),
+        Lesson.category == category
+    ).order_by(Lesson.exercise_number.asc().nullslast(), Lesson.created_at.desc()).all()
+    
+    return render_template('dashboard/category_lessons.html', category=category, lessons=lessons)
 
 @dashboard_bp.route('/student/lessons/<int:lesson_id>')
 @login_required
@@ -59,15 +80,35 @@ def teacher():
         current_user.generate_teacher_code()
         db.session.commit()
         
-    lessons = Lesson.query.filter_by(teacher_id=current_user.id).order_by(Lesson.created_at.desc()).all()
+    lessons = Lesson.query.filter_by(teacher_id=current_user.id).order_by(Lesson.category.asc(), Lesson.exercise_number.asc().nullslast(), Lesson.created_at.desc()).all()
+    
+    # Group lessons by category
+    lessons_by_category = {}
+    for lesson in lessons:
+        cat = lesson.category
+        if cat not in lessons_by_category:
+            lessons_by_category[cat] = []
+        lessons_by_category[cat].append(lesson)
+        
     students = current_user.students.all()
-    return render_template('dashboard/teacher.html', lessons=lessons, students=students)
+    return render_template('dashboard/teacher.html', lessons_by_category=lessons_by_category, students=students)
 
 @dashboard_bp.route('/teacher/lessons/new', methods=['GET', 'POST'])
 @login_required
 @role_required('teacher')
 def create_lesson():
     if request.method == 'POST':
+        category = request.form.get('category')
+        exercise_name = request.form.get('exercise_name')
+        exercise_number = request.form.get('exercise_number')
+        if exercise_number:
+            try:
+                exercise_number = int(exercise_number)
+            except ValueError:
+                exercise_number = None
+        else:
+            exercise_number = None
+            
         title = request.form.get('title')
         raga = request.form.get('raga')
         shruti = request.form.get('shruti')
@@ -92,6 +133,9 @@ def create_lesson():
         
         new_lesson = Lesson(
             teacher_id=current_user.id,
+            category=category,
+            exercise_name=exercise_name,
+            exercise_number=exercise_number,
             title=title,
             raga=raga,
             shruti=shruti,
@@ -117,6 +161,17 @@ def edit_lesson(lesson_id):
         abort(403)
         
     if request.method == 'POST':
+        lesson.category = request.form.get('category')
+        lesson.exercise_name = request.form.get('exercise_name')
+        exercise_number = request.form.get('exercise_number')
+        if exercise_number:
+            try:
+                lesson.exercise_number = int(exercise_number)
+            except ValueError:
+                lesson.exercise_number = None
+        else:
+            lesson.exercise_number = None
+            
         lesson.title = request.form.get('title')
         lesson.raga = request.form.get('raga')
         lesson.shruti = request.form.get('shruti')

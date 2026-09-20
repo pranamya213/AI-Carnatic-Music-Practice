@@ -49,7 +49,7 @@
 
         <div class="row mb-5">
             <div class="col-12">
-                <h3 class="text-cream serif-font mb-0">Available Lessons</h3>
+                <h3 class="text-cream serif-font mb-0">Practice Categories</h3>
             </div>
         </div>
 
@@ -60,21 +60,20 @@
                         <p class="text-muted-custom mb-0">No teacher connected yet. Connect with your teacher to access assigned practice lessons.</p>
                     </div>
                 </div>
-            {% elif lessons %}
-                {% for lesson in lessons %}
+            {% elif categories %}
+                {% for category, count in categories.items() %}
                 <div class="col-md-6 col-lg-4">
                     <div class="glass-card p-4 h-100 hover-lift d-flex flex-column">
-                        <div class="mb-3">
-                            <h4 class="text-cream mb-1">{{ lesson.title }}</h4>
-                            <div class="text-gold small mb-3">{{ lesson.raga }}</div>
-                            <div class="d-flex flex-wrap gap-2 mb-3">
-                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Tala: {{ lesson.tala }}</span>
-                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Laya: {{ lesson.laya }}</span>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="text-gold fs-3 me-3">&#9835;</span>
+                                <h4 class="text-cream mb-0">{{ category }}</h4>
                             </div>
-                            <p class="text-muted-custom small mb-0">By: {{ lesson.teacher.name }}</p>
+                            <p class="text-muted-custom small mb-0">Practice exercises</p>
+                            <p class="text-gold small mb-0">{{ count }} lesson(s)</p>
                         </div>
                         <div class="mt-auto pt-3 border-top border-gold-muted">
-                            <a href="{{ url_for('dashboard.student_lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-hero w-100">View Lesson</a>
+                            <a href="{{ url_for('dashboard.student_category_lessons', category=category) }}" class="btn btn-outline-hero w-100">Open Category</a>
                         </div>
                     </div>
                 </div>

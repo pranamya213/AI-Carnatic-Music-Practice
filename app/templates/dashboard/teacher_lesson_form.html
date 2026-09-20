@@ -18,10 +18,32 @@
                 <div class="glass-card p-4 p-md-5">
                     <form method="POST" enctype="multipart/form-data">
                         
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-4 mb-md-0">
+                                <label for="category" class="form-label text-gold">Category</label>
+                                <select class="form-select bg-dark text-cream border-gold-muted" id="category" name="category" required>
+                                    <option value="" disabled {% if not lesson %}selected{% endif %}>Select Category</option>
+                                    {% for c in ['Sarali Varisai', 'Janta Varisai', 'Dhattu Varisai', 'Alankaram', 'Other'] %}
+                                    <option value="{{ c }}" {% if lesson and lesson.category == c %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-4 mb-md-0">
+                                <label for="exercise_number" class="form-label text-gold">Exercise #</label>
+                                <input type="number" class="form-control bg-dark text-cream border-gold-muted" id="exercise_number" name="exercise_number" min="1"
+                                       value="{{ lesson.exercise_number if lesson and lesson.exercise_number else '' }}" placeholder="e.g. 1">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="exercise_name" class="form-label text-gold">Exercise Name</label>
+                                <input type="text" class="form-control bg-dark text-cream border-gold-muted" id="exercise_name" name="exercise_name" required
+                                       value="{{ lesson.exercise_name if lesson else '' }}" placeholder="e.g. Exercise 1">
+                            </div>
+                        </div>
+
                         <div class="mb-4">
-                            <label for="title" class="form-label text-gold">Lesson / Exercise Name</label>
+                            <label for="title" class="form-label text-gold">Lesson Title (Full)</label>
                             <input type="text" class="form-control bg-dark text-cream border-gold-muted" id="title" name="title" required
-                                   value="{{ lesson.title if lesson else '' }}" placeholder="e.g. Mayamalavagowla Sarali Varisai">
+                                   value="{{ lesson.title if lesson else '' }}" placeholder="e.g. Sarali Varisai - Exercise 1">
                         </div>
 
                         <div class="row mb-4">

@@ -12,6 +12,12 @@ class Lesson(db.Model):
     shruti = db.Column(db.String(10), nullable=False)
     tala = db.Column(db.String(50), nullable=False)
     laya = db.Column(db.String(50), nullable=False)
+    
+    # Phase 4: Category and Exercise Organization
+    category = db.Column(db.String(100), nullable=False, default="Other")
+    exercise_name = db.Column(db.String(200), nullable=False, default="Exercise")
+    exercise_number = db.Column(db.Integer, nullable=True)
+
     description = db.Column(db.Text, nullable=True)
     reference_audio_filename = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category }} - CarnaticAI{% endblock %}
+
+{% block content %}
+<section class="dashboard-section py-5" style="min-height: 100vh; background: linear-gradient(to bottom, rgba(26,15,10,1) 0%, rgba(45,20,15,1) 100%);">
+    <div class="container pt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{{ url_for('dashboard.student') }}" class="btn btn-outline-light mb-3">&larr; Back to Dashboard</a>
+                <h2 class="text-cream serif-font text-uppercase">{{ category }}</h2>
+                <div class="ornament-divider-left mb-3"></div>
+                <p class="text-muted-custom fs-5">Practice Exercises</p>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            {% if lessons %}
+                {% for lesson in lessons %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="glass-card p-4 h-100 hover-lift d-flex flex-column">
+                        <div class="mb-3">
+                            <h4 class="text-cream mb-1">{{ lesson.exercise_name }}</h4>
+                            <div class="text-gold small mb-3">{{ lesson.raga }}</div>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Tala: {{ lesson.tala }}</span>
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Laya: {{ lesson.laya }}</span>
+                                <span class="badge bg-dark-brown border border-gold-muted text-cream">Shruti: {{ lesson.shruti }}</span>
+                            </div>
+                            <p class="text-muted-custom small mb-0">Teacher: {{ lesson.teacher.name }}</p>
+                        </div>
+                        <div class="mt-auto pt-3 border-top border-gold-muted">
+                            <a href="{{ url_for('dashboard.student_lesson_details', lesson_id=lesson.id) }}" class="btn btn-outline-hero w-100">Play/View Lesson</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="glass-card p-5 text-center">
+                        <p class="text-muted-custom mb-0">No exercises found for this category.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
