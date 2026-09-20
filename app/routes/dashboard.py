@@ -7,6 +7,7 @@ from app.models.lesson import Lesson
 from app.models.user import User
 from app.extensions import db
 from app.services.audio_processor import process_reference_audio
+from app.services.pitch_analyzer import analyze_pitch_for_lesson
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -157,9 +158,28 @@ def create_lesson():
                 new_lesson.audio_channels = metadata['audio_channels']
                 new_lesson.audio_waveform_filename = metadata['audio_waveform_filename']
                 new_lesson.audio_processing_status = metadata['audio_processing_status']
+                
+                # Phase 6: Pitch Analysis
+                try:
+                    pitch_metadata = analyze_pitch_for_lesson(file_path, current_app.config['UPLOAD_FOLDER'], filename)
+                    new_lesson.pitch_analysis_status = pitch_metadata['pitch_analysis_status']
+                    new_lesson.pitch_data_filename = pitch_metadata['pitch_data_filename']
+                    new_lesson.pitch_plot_filename = pitch_metadata['pitch_plot_filename']
+                    new_lesson.pitch_analysis_method = pitch_metadata['pitch_analysis_method']
+                    new_lesson.pitch_fmin = pitch_metadata['pitch_fmin']
+                    new_lesson.pitch_fmax = pitch_metadata['pitch_fmax']
+                    new_lesson.pitch_median = pitch_metadata['pitch_median']
+                    new_lesson.pitch_min = pitch_metadata['pitch_min']
+                    new_lesson.pitch_max = pitch_metadata['pitch_max']
+                    new_lesson.pitch_voiced_percentage = pitch_metadata['pitch_voiced_percentage']
+                except Exception as e:
+                    current_app.logger.error(f"Error extracting pitch for lesson: {e}")
+                    new_lesson.pitch_analysis_status = "Failed"
+                    
             except Exception as e:
                 current_app.logger.error(f"Error processing audio for lesson: {e}")
                 new_lesson.audio_processing_status = "Failed"
+                new_lesson.pitch_analysis_status = "Failed"
         
         db.session.add(new_lesson)
         db.session.commit()
@@ -231,9 +251,28 @@ def edit_lesson(lesson_id):
                     lesson.audio_channels = metadata['audio_channels']
                     lesson.audio_waveform_filename = metadata['audio_waveform_filename']
                     lesson.audio_processing_status = metadata['audio_processing_status']
+                    
+                    # Phase 6: Pitch Analysis
+                    try:
+                        pitch_metadata = analyze_pitch_for_lesson(file_path, current_app.config['UPLOAD_FOLDER'], filename)
+                        lesson.pitch_analysis_status = pitch_metadata['pitch_analysis_status']
+                        lesson.pitch_data_filename = pitch_metadata['pitch_data_filename']
+                        lesson.pitch_plot_filename = pitch_metadata['pitch_plot_filename']
+                        lesson.pitch_analysis_method = pitch_metadata['pitch_analysis_method']
+                        lesson.pitch_fmin = pitch_metadata['pitch_fmin']
+                        lesson.pitch_fmax = pitch_metadata['pitch_fmax']
+                        lesson.pitch_median = pitch_metadata['pitch_median']
+                        lesson.pitch_min = pitch_metadata['pitch_min']
+                        lesson.pitch_max = pitch_metadata['pitch_max']
+                        lesson.pitch_voiced_percentage = pitch_metadata['pitch_voiced_percentage']
+                    except Exception as e:
+                        current_app.logger.error(f"Error extracting pitch for lesson edit: {e}")
+                        lesson.pitch_analysis_status = "Failed"
+                        
                 except Exception as e:
                     current_app.logger.error(f"Error processing audio for lesson edit: {e}")
                     lesson.audio_processing_status = "Failed"
+                    lesson.pitch_analysis_status = "Failed"
                     
             else:
                 flash('Invalid file format. Allowed formats: WAV, MP3, M4A.', 'danger')
@@ -265,6 +304,45 @@ def delete_lesson(lesson_id):
     db.session.commit()
     flash('Lesson deleted successfully.', 'success')
     return redirect(url_for('dashboard.teacher'))
+
+@dashboard_bp.route('/teacher/lessons/<int:lesson_id>/analyze_pitch', methods=['POST'])
+@login_required
+@role_required('teacher')
+def analyze_pitch_route(lesson_id):
+    lesson = Lesson.query.get_or_404(lesson_id)
+    if lesson.teacher_id != current_user.id:
+        abort(403)
+        
+    if not lesson.reference_audio_filename:
+        flash("No reference audio to analyze.", "danger")
+        return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
+        
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], lesson.reference_audio_filename)
+    if not os.path.exists(file_path):
+        flash("Reference audio file not found on server.", "danger")
+        return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
+        
+    try:
+        pitch_metadata = analyze_pitch_for_lesson(file_path, current_app.config['UPLOAD_FOLDER'], lesson.reference_audio_filename)
+        lesson.pitch_analysis_status = pitch_metadata['pitch_analysis_status']
+        lesson.pitch_data_filename = pitch_metadata['pitch_data_filename']
+        lesson.pitch_plot_filename = pitch_metadata['pitch_plot_filename']
+        lesson.pitch_analysis_method = pitch_metadata['pitch_analysis_method']
+        lesson.pitch_fmin = pitch_metadata['pitch_fmin']
+        lesson.pitch_fmax = pitch_metadata['pitch_fmax']
+        lesson.pitch_median = pitch_metadata['pitch_median']
+        lesson.pitch_min = pitch_metadata['pitch_min']
+        lesson.pitch_max = pitch_metadata['pitch_max']
+        lesson.pitch_voiced_percentage = pitch_metadata['pitch_voiced_percentage']
+        db.session.commit()
+        flash('Pitch analysis completed successfully.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Error extracting pitch manually: {e}")
+        lesson.pitch_analysis_status = "Failed"
+        db.session.commit()
+        flash('Pitch analysis failed. Please try again.', 'danger')
+        
+    return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
 
 @dashboard_bp.route('/teacher/lessons/<int:lesson_id>')
 @login_required

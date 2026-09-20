@@ -29,6 +29,18 @@ class Lesson(db.Model):
     audio_waveform_filename = db.Column(db.String(255), nullable=True)
     audio_processing_status = db.Column(db.String(50), default="Pending")
 
+    # Phase 6: Pitch Analysis Metadata
+    pitch_analysis_status = db.Column(db.String(50), default="Not analyzed")
+    pitch_data_filename = db.Column(db.String(255), nullable=True)
+    pitch_plot_filename = db.Column(db.String(255), nullable=True)
+    pitch_analysis_method = db.Column(db.String(50), nullable=True)
+    pitch_fmin = db.Column(db.Float, nullable=True)
+    pitch_fmax = db.Column(db.Float, nullable=True)
+    pitch_median = db.Column(db.Float, nullable=True)
+    pitch_min = db.Column(db.Float, nullable=True)
+    pitch_max = db.Column(db.Float, nullable=True)
+    pitch_voiced_percentage = db.Column(db.Float, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
