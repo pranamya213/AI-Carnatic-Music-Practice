@@ -8,6 +8,7 @@ from app.models.user import User
 from app.extensions import db
 from app.services.audio_processor import process_reference_audio
 from app.services.pitch_analyzer import analyze_pitch_for_lesson
+from app.services.swara_mapper import analyze_swaras_for_lesson
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -177,7 +178,7 @@ def create_lesson():
                     new_lesson.pitch_analysis_status = "Failed"
                     
             except Exception as e:
-                current_app.logger.error(f"Error processing audio for lesson: {e}")
+                current_app.logger.exception(f"Error processing audio for lesson: {e}")
                 new_lesson.audio_processing_status = "Failed"
                 new_lesson.pitch_analysis_status = "Failed"
         
@@ -270,7 +271,7 @@ def edit_lesson(lesson_id):
                         lesson.pitch_analysis_status = "Failed"
                         
                 except Exception as e:
-                    current_app.logger.error(f"Error processing audio for lesson edit: {e}")
+                    current_app.logger.exception(f"Error processing audio for lesson edit: {e}")
                     lesson.audio_processing_status = "Failed"
                     lesson.pitch_analysis_status = "Failed"
                     
@@ -341,6 +342,40 @@ def analyze_pitch_route(lesson_id):
         lesson.pitch_analysis_status = "Failed"
         db.session.commit()
         flash('Pitch analysis failed. Please try again.', 'danger')
+        
+    return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
+
+@dashboard_bp.route('/teacher/lessons/<int:lesson_id>/analyze_swaras', methods=['POST'])
+@login_required
+@role_required('teacher')
+def analyze_swaras_route(lesson_id):
+    lesson = Lesson.query.get_or_404(lesson_id)
+    if lesson.teacher_id != current_user.id:
+        abort(403)
+        
+    if not lesson.pitch_data_filename:
+        flash("Phase 6 Pitch Analysis data is missing. Please run Pitch Analysis first.", "danger")
+        return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
+        
+    if not lesson.shruti:
+        flash("Swara analysis requires a valid tonic/shruti.", "danger")
+        return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
+        
+    try:
+        swara_metadata = analyze_swaras_for_lesson(lesson, current_app.config['UPLOAD_FOLDER'])
+        lesson.swara_analysis_status = swara_metadata['swara_analysis_status']
+        lesson.swara_data_filename = swara_metadata['swara_data_filename']
+        lesson.swara_plot_filename = swara_metadata['swara_plot_filename']
+        lesson.swara_analysis_method = swara_metadata['swara_analysis_method']
+        lesson.tonic_frequency = swara_metadata['tonic_frequency']
+        lesson.swara_voiced_percentage = swara_metadata['swara_voiced_percentage']
+        db.session.commit()
+        flash('Swara mapping completed successfully.', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Error mapping swaras manually: {e}")
+        lesson.swara_analysis_status = "Failed"
+        db.session.commit()
+        flash('Swara mapping failed. Please try again.', 'danger')
         
     return redirect(url_for('dashboard.teacher_lesson_details', lesson_id=lesson.id))
 

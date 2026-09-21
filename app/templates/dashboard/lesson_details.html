@@ -204,6 +204,62 @@
                             {% endif %}
                         </div>
                     </div>
+                    
+                    <div class="mb-5">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="text-gold mb-0">Swara Analysis (Teacher View)</h4>
+                            {% if lesson.swara_analysis_status == 'Not analyzed' or lesson.swara_analysis_status == 'Failed' %}
+                                <form action="{{ url_for('dashboard.analyze_swaras_route', lesson_id=lesson.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-gold">Analyze Swaras</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                            <div class="row mb-4">
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <span class="text-muted-custom small d-block mb-1">Status</span>
+                                    <span class="text-cream">
+                                        {% if lesson.swara_analysis_status == 'Ready' %}
+                                            <span class="badge bg-success">Ready</span>
+                                        {% elif lesson.swara_analysis_status == 'Failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Not analyzed</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <span class="text-muted-custom small d-block mb-1">Tonic (Shruti)</span>
+                                    <span class="text-cream">{{ lesson.shruti }}</span>
+                                </div>
+                                <div class="col-md-3 mb-3 mb-md-0">
+                                    <span class="text-muted-custom small d-block mb-1">Tonic Frequency</span>
+                                    <span class="text-cream">
+                                        {{ "%.1f Hz"|format(lesson.tonic_frequency) if lesson.tonic_frequency else 'N/A' }}
+                                    </span>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="text-muted-custom small d-block mb-1">Voiced Swaras</span>
+                                    <span class="text-cream">
+                                        {% if lesson.swara_voiced_percentage %}
+                                            {{ "%.1f"|format(lesson.swara_voiced_percentage) }}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            {% if lesson.swara_plot_filename %}
+                            <div class="mt-4 pt-3 border-top border-gold-muted">
+                                <span class="text-muted-custom small d-block mb-2">Normalized Swara Contour</span>
+                                <div class="text-center rounded overflow-hidden">
+                                    <img src="{{ url_for('dashboard.uploaded_file', filename=lesson.swara_plot_filename) }}" alt="Swara Contour" class="img-fluid w-100" style="max-height: 250px; object-fit: contain;">
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                     {% endif %}
                     
                     {% if not is_teacher %}

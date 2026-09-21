@@ -41,6 +41,14 @@ class Lesson(db.Model):
     pitch_max = db.Column(db.Float, nullable=True)
     pitch_voiced_percentage = db.Column(db.Float, nullable=True)
 
+    # Phase 7: Swara Analysis Metadata
+    swara_analysis_status = db.Column(db.String(50), default="Not analyzed")
+    swara_data_filename = db.Column(db.String(255), nullable=True)
+    swara_plot_filename = db.Column(db.String(255), nullable=True)
+    swara_analysis_method = db.Column(db.String(50), nullable=True)
+    tonic_frequency = db.Column(db.Float, nullable=True)
+    swara_voiced_percentage = db.Column(db.Float, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     

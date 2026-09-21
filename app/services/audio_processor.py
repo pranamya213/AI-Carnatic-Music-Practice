@@ -1,10 +1,10 @@
 import os
-import librosa
-import librosa.display
 import matplotlib
 matplotlib.use('Agg') # Use non-interactive backend for server
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.signal
+import soundfile as sf
 import time
 
 def validate_audio_file(file_path):
@@ -20,12 +20,9 @@ def validate_audio_file(file_path):
 
 def load_audio(file_path, target_sr=22050):
     """
-    Load audio, resample, and convert to mono using librosa.
+    Load audio, resample, and convert to mono using soundfile and scipy.
     Returns (y, sr, orig_sr, duration, channels).
     """
-    import soundfile as sf
-    import warnings
-    
     orig_sr = None
     channels = 1
     duration = 0.0
@@ -36,43 +33,76 @@ def load_audio(file_path, target_sr=22050):
         channels = info.channels
         duration = info.frames / float(info.samplerate)
     except Exception as e:
-        # Fallback if sf.info fails
-        pass
+        raise ValueError(f"Could not read audio info: {e}")
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        y, sr = librosa.load(file_path, sr=target_sr, mono=True)
-        
+    # Read full audio
+    y, sr = sf.read(file_path)
     if orig_sr is None:
-        duration = librosa.get_duration(y=y, sr=sr)
-        # Attempt to get original sr via librosa
-        try:
-            _, orig_sr_fallback = librosa.load(file_path, sr=None, duration=0.1)
-            orig_sr = orig_sr_fallback
-        except:
-            orig_sr = sr # fallback to target sr if original cannot be determined
+        orig_sr = sr
+        duration = len(y) / float(sr)
+        channels = 1 if len(y.shape) == 1 else y.shape[1]
+        
+    # Convert to mono if necessary
+    if len(y.shape) > 1:
+        y = np.mean(y, axis=1)
+        
+    # Resample if necessary
+    if sr != target_sr:
+        num_samples = int(len(y) * float(target_sr) / sr)
+        if num_samples > 0:
+            y = scipy.signal.resample(y, num_samples)
+        sr = target_sr
             
     return y, sr, orig_sr, duration, channels
 
-def trim_silence(y):
+def trim_silence(y, top_db=40):
     """
-    Conservatively trim leading and trailing silence.
-    Uses a very low threshold so it only removes absolute silence.
+    Conservatively trim leading and trailing silence using numpy.
+    Uses an amplitude threshold equivalent to top_db relative to peak.
     """
-    y_trimmed, index = librosa.effects.trim(y, top_db=40)
-    return y_trimmed
+    if len(y) == 0:
+        return y
+        
+    peak = np.max(np.abs(y))
+    if peak == 0:
+        return y
+        
+    # top_db corresponds to 10**(-top_db/20) amplitude relative to peak
+    threshold = peak * (10.0 ** (-top_db / 20.0))
+    
+    # Find first and last frames above threshold
+    non_silent = np.where(np.abs(y) > threshold)[0]
+    
+    if len(non_silent) > 0:
+        start_idx = non_silent[0]
+        end_idx = non_silent[-1] + 1
+        return y[start_idx:end_idx]
+    else:
+        return y
 
 def generate_waveform(y, sr, output_path):
     """
     Generate and save a waveform plot using matplotlib.
+    Avoids librosa.display.waveshow.
     """
     plt.figure(figsize=(10, 3))
-    
-    # Use dark theme matching CarnaticAI
     plt.style.use('dark_background')
     
-    # Plot waveform with amber/gold color
-    librosa.display.waveshow(y, sr=sr, color='#d4af37', alpha=0.8)
+    # Downsample for faster plotting without losing visual fidelity
+    max_points = 20000
+    if len(y) > max_points:
+        downsample_factor = len(y) // max_points
+        y_plot = y[::downsample_factor]
+    else:
+        y_plot = y
+        
+    times = np.linspace(0, len(y) / sr, num=len(y_plot))
+    
+    # Plot waveform with amber/gold color matching CarnaticAI
+    plt.plot(times, y_plot, color='#d4af37', alpha=0.8, linewidth=0.5)
+    
+    # Fill between for a fuller look (simulating waveshow)
+    plt.fill_between(times, y_plot, 0, color='#d4af37', alpha=0.3)
     
     plt.axis('off')
     plt.tight_layout(pad=0)
