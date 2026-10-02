@@ -263,8 +263,69 @@
                     {% endif %}
                     
                     {% if not is_teacher %}
-                    <div class="text-center mt-5">
-                        <button class="btn btn-hero btn-lg px-5">Start Practice Session (Coming Soon)</button>
+                    <div class="mb-5">
+                        <h4 class="text-gold mb-3">🎤 Practice Recording</h4>
+                        <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                            <form action="{{ url_for('dashboard.upload_practice_recording', lesson_id=lesson.id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
+                                <div class="mb-3">
+                                    <label for="practice_audio" class="form-label text-cream">Choose Audio File (WAV, MP3, M4A)</label>
+                                    <input class="form-control bg-dark text-light border-secondary" type="file" id="practice_audio" name="practice_audio" accept=".wav,.mp3,.m4a" required>
+                                </div>
+                                <button type="submit" class="btn btn-gold">Upload Practice Recording</button>
+                            </form>
+                            
+                            {% if attempts %}
+                                <h5 class="text-cream mb-3 mt-4">Your Practice Attempts</h5>
+                                <div class="accordion" id="attemptsAccordion">
+                                {% for attempt in attempts %}
+                                    <div class="accordion-item bg-dark border-secondary mb-2">
+                                        <h2 class="accordion-header" id="heading-{{ attempt.id }}">
+                                            <button class="accordion-button collapsed bg-dark text-cream border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ attempt.id }}" aria-expanded="false" aria-controls="collapse-{{ attempt.id }}">
+                                                Attempt {{ loop.revindex }} - {{ attempt.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                                {% if attempt.practice_audio_processing_status == 'Ready' %}
+                                                    <span class="badge bg-success ms-2">Ready</span>
+                                                {% elif attempt.practice_audio_processing_status == 'Processing' %}
+                                                    <span class="badge bg-warning text-dark ms-2">Processing</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger ms-2">Failed</span>
+                                                {% endif %}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-{{ attempt.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ attempt.id }}" data-bs-parent="#attemptsAccordion">
+                                            <div class="accordion-body text-light">
+                                                {% if attempt.practice_audio_processing_status == 'Ready' %}
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-4">
+                                                            <small class="text-muted-custom d-block">Duration</small>
+                                                            <span>{{ "%02d"|format(attempt.practice_audio_duration // 60) }}:{{ "%02d"|format(attempt.practice_audio_duration % 60) }}</span>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <small class="text-muted-custom d-block">Sample Rate</small>
+                                                            <span>{{ attempt.practice_audio_analysis_sr }} Hz</span>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <small class="text-muted-custom d-block">Channels</small>
+                                                            <span>{{ 'Mono' if attempt.practice_audio_channels == 1 else 'Stereo' }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <audio controls class="w-100 custom-audio-player">
+                                                            <source src="{{ url_for('dashboard.uploaded_practice_file', filename=attempt.practice_audio_filename) }}" type="audio/mpeg">
+                                                            Your browser does not support the audio element.
+                                                        </audio>
+                                                    </div>
+                                                {% else %}
+                                                    <p class="text-muted mb-0">Processing failed or is still pending.</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted-custom mt-3">No practice attempts yet.</p>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endif %}
                 </div>

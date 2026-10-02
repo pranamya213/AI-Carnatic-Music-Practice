@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from app.utilities.decorators import role_required
 from app.models.lesson import Lesson
 from app.models.user import User
+from app.models.practice_attempt import PracticeAttempt
 from app.extensions import db
 from app.services.audio_processor import process_reference_audio
 from app.services.pitch_analyzer import analyze_pitch_for_lesson
@@ -73,7 +74,8 @@ def student_lesson_details(lesson_id):
     teacher_ids = [t.id for t in current_user.teachers]
     if lesson.teacher_id not in teacher_ids:
         abort(403)
-    return render_template('dashboard/lesson_details.html', lesson=lesson, is_teacher=False)
+    attempts = PracticeAttempt.query.filter_by(lesson_id=lesson.id, student_id=current_user.id).order_by(PracticeAttempt.created_at.desc()).all()
+    return render_template('dashboard/lesson_details.html', lesson=lesson, attempts=attempts, is_teacher=False)
 
 @dashboard_bp.route('/teacher')
 @login_required
@@ -392,6 +394,82 @@ def teacher_lesson_details(lesson_id):
 @login_required
 def uploaded_file(filename):
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
+
+@dashboard_bp.route('/student/lessons/<int:lesson_id>/practice', methods=['POST'])
+@login_required
+@role_required('student')
+def upload_practice_recording(lesson_id):
+    lesson = Lesson.query.get_or_404(lesson_id)
+    teacher_ids = [t.id for t in current_user.teachers]
+    if lesson.teacher_id not in teacher_ids:
+        abort(403)
+        
+    file = request.files.get('practice_audio')
+    if not file or file.filename == '':
+        flash('No file selected.', 'danger')
+        return redirect(url_for('dashboard.student_lesson_details', lesson_id=lesson.id))
+        
+    if not allowed_file(file.filename):
+        flash('Invalid file format. Allowed formats: WAV, MP3, M4A.', 'danger')
+        return redirect(url_for('dashboard.student_lesson_details', lesson_id=lesson.id))
+        
+    filename = secure_filename(file.filename)
+    import time
+    filename = f"attempt_{current_user.id}_{lesson.id}_{int(time.time())}_{filename}"
+    
+    practice_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'practice')
+    os.makedirs(practice_dir, exist_ok=True)
+    
+    file_path = os.path.join(practice_dir, filename)
+    file.save(file_path)
+    
+    # Create DB record
+    attempt = PracticeAttempt(
+        lesson_id=lesson.id,
+        student_id=current_user.id,
+        practice_audio_filename=filename,
+        practice_audio_processing_status="Processing"
+    )
+    db.session.add(attempt)
+    db.session.commit()
+    
+    # Process audio
+    try:
+        from app.services.audio_processor import load_audio, validate_audio_file
+        is_valid, error_msg = validate_audio_file(file_path)
+        if not is_valid:
+            raise ValueError(error_msg)
+            
+        target_sr = 22050
+        y, sr, orig_sr, duration, channels = load_audio(file_path, target_sr=target_sr)
+        
+        attempt.practice_audio_duration = duration
+        attempt.practice_audio_original_sr = orig_sr
+        attempt.practice_audio_analysis_sr = sr
+        attempt.practice_audio_channels = channels
+        attempt.practice_audio_processing_status = "Ready"
+        
+    except Exception as e:
+        current_app.logger.exception(f"Error processing practice audio: {e}")
+        attempt.practice_audio_processing_status = "Failed"
+        flash(f'Processing failed: {str(e)}', 'danger')
+    
+    db.session.commit()
+    if attempt.practice_audio_processing_status == "Ready":
+        flash('Practice recording uploaded and processed successfully.', 'success')
+        
+    return redirect(url_for('dashboard.student_lesson_details', lesson_id=lesson.id))
+
+@dashboard_bp.route('/uploads/practice/<filename>')
+@login_required
+@role_required('student')
+def uploaded_practice_file(filename):
+    # Verify ownership before serving
+    attempt = PracticeAttempt.query.filter_by(practice_audio_filename=filename).first_or_404()
+    if attempt.student_id != current_user.id:
+        abort(403)
+    practice_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'practice')
+    return send_from_directory(practice_dir, filename)
 
 @dashboard_bp.route('/admin')
 @login_required
