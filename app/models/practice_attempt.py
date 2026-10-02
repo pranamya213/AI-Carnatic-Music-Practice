@@ -16,6 +16,17 @@ class PracticeAttempt(db.Model):
     practice_audio_channels = db.Column(db.Integer, nullable=True)
     practice_audio_processing_status = db.Column(db.String(50), default="Pending")
     
+    # Phase 9: Comparison Metadata
+    student_tonic_frequency = db.Column(db.Float, nullable=True)
+    comparison_status = db.Column(db.String(50), default="Not compared")
+    comparison_data_filename = db.Column(db.String(255), nullable=True)
+    comparison_plot_filename = db.Column(db.String(255), nullable=True)
+    swara_match_percentage = db.Column(db.Float, nullable=True)
+    mean_pitch_deviation_cents = db.Column(db.Float, nullable=True)
+    median_pitch_deviation_cents = db.Column(db.Float, nullable=True)
+    comparison_method = db.Column(db.String(50), nullable=True)
+    comparison_created_at = db.Column(db.DateTime, nullable=True)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships

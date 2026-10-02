@@ -471,6 +471,46 @@ def uploaded_practice_file(filename):
     practice_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'practice')
     return send_from_directory(practice_dir, filename)
 
+@dashboard_bp.route('/student/lessons/<int:lesson_id>/practice/<int:attempt_id>/compare', methods=['POST'])
+@login_required
+@role_required('student')
+def compare_practice_attempt(lesson_id, attempt_id):
+    lesson = Lesson.query.get_or_404(lesson_id)
+    attempt = PracticeAttempt.query.get_or_404(attempt_id)
+    
+    if attempt.student_id != current_user.id or attempt.lesson_id != lesson.id:
+        abort(403)
+        
+    student_shruti = request.form.get('student_shruti')
+    if not student_shruti:
+        student_shruti = lesson.shruti # Default to teacher's shruti
+        
+    try:
+        from app.services.performance_comparator import compare_performances
+        from datetime import datetime
+        results = compare_performances(lesson, attempt, current_app.config['UPLOAD_FOLDER'], student_shruti)
+        
+        attempt.comparison_status = results['comparison_status']
+        attempt.comparison_data_filename = results['comparison_data_filename']
+        attempt.comparison_plot_filename = results['comparison_plot_filename']
+        attempt.swara_match_percentage = results['swara_match_percentage']
+        attempt.mean_pitch_deviation_cents = results['mean_pitch_deviation_cents']
+        attempt.median_pitch_deviation_cents = results['median_pitch_deviation_cents']
+        attempt.comparison_method = results['comparison_method']
+        attempt.student_tonic_frequency = results['student_tonic_frequency']
+        attempt.comparison_created_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Comparison completed successfully.', 'success')
+        
+    except Exception as e:
+        current_app.logger.exception(f"Error comparing performance: {e}")
+        attempt.comparison_status = "Failed"
+        db.session.commit()
+        flash(f'Comparison failed: {str(e)}', 'danger')
+        
+    return redirect(url_for('dashboard.student_lesson_details', lesson_id=lesson.id))
+
 @dashboard_bp.route('/admin')
 @login_required
 @role_required('admin')

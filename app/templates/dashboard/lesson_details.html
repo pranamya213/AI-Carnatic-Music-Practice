@@ -314,6 +314,60 @@
                                                             Your browser does not support the audio element.
                                                         </audio>
                                                     </div>
+                                                    
+                                                    <hr class="border-secondary my-3">
+                                                    
+                                                    <div class="comparison-section">
+                                                        <h6 class="text-gold mb-2">Practice Comparison</h6>
+                                                        {% if attempt.comparison_status == 'Ready' %}
+                                                            <div class="row mb-3">
+                                                                <div class="col-md-4">
+                                                                    <small class="text-muted-custom d-block">Swara Pattern Match</small>
+                                                                    <span class="fs-5 text-success">{{ "%.1f"|format(attempt.swara_match_percentage) }}%</span>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <small class="text-muted-custom d-block">Average Pitch Difference</small>
+                                                                    <span class="fs-5 text-cream">{{ "%.0f"|format(attempt.mean_pitch_deviation_cents) }} cents</span>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <small class="text-muted-custom d-block">Student Tonic</small>
+                                                                    <span class="fs-5 text-cream">{{ "%.1f"|format(attempt.student_tonic_frequency) }} Hz</span>
+                                                                </div>
+                                                            </div>
+                                                            {% if attempt.comparison_plot_filename %}
+                                                                <div class="mt-3">
+                                                                    <img src="{{ url_for('dashboard.uploaded_practice_file', filename=attempt.comparison_plot_filename) }}" alt="Comparison Plot" class="img-fluid rounded w-100" style="max-height: 250px; object-fit: contain;">
+                                                                </div>
+                                                            {% endif %}
+                                                            
+                                                            <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST" class="mt-3">
+                                                                <div class="input-group input-group-sm w-50">
+                                                                    <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
+                                                                    <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
+                                                                    <button type="submit" class="btn btn-outline-gold">Re-compare</button>
+                                                                </div>
+                                                            </form>
+                                                            
+                                                        {% elif attempt.comparison_status == 'Failed' %}
+                                                            <p class="text-danger small mb-2">Previous comparison failed. Teacher reference swara analysis must be complete.</p>
+                                                            <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST">
+                                                                <div class="input-group input-group-sm w-50">
+                                                                    <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
+                                                                    <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
+                                                                    <button type="submit" class="btn btn-sm btn-outline-gold">Compare</button>
+                                                                </div>
+                                                            </form>
+                                                        {% else %}
+                                                            <p class="text-muted-custom small mb-2">Not compared yet. Run comparison to see pitch and swara differences.</p>
+                                                            <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST">
+                                                                <div class="input-group input-group-sm w-50">
+                                                                    <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
+                                                                    <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
+                                                                    <button type="submit" class="btn btn-sm btn-outline-gold">Compare with Teacher</button>
+                                                                </div>
+                                                            </form>
+                                                        {% endif %}
+                                                    </div>
                                                 {% else %}
                                                     <p class="text-muted mb-0">Processing failed or is still pending.</p>
                                                 {% endif %}
