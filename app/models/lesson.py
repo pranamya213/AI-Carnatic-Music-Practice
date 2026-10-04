@@ -19,6 +19,7 @@ class Lesson(db.Model):
     exercise_number = db.Column(db.Integer, nullable=True)
 
     description = db.Column(db.Text, nullable=True)
+    expected_swara_sequence = db.Column(db.Text, nullable=True)
     reference_audio_filename = db.Column(db.String(255), nullable=True)
     
     # Phase 5: Audio Processing Metadata

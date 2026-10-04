@@ -121,6 +121,12 @@ def create_lesson():
         laya = request.form.get('laya')
         description = request.form.get('description')
         
+        expected_swara_sequence = request.form.get('expected_swara_sequence')
+        if expected_swara_sequence:
+            expected_swara_sequence = expected_swara_sequence.strip()
+        else:
+            expected_swara_sequence = None
+        
         file = request.files.get('reference_audio')
         filename = None
         
@@ -148,6 +154,7 @@ def create_lesson():
             tala=tala,
             laya=laya,
             description=description,
+            expected_swara_sequence=expected_swara_sequence,
             reference_audio_filename=filename
         )
         
@@ -218,6 +225,12 @@ def edit_lesson(lesson_id):
         lesson.laya = request.form.get('laya')
         lesson.description = request.form.get('description')
         
+        expected_swara_sequence = request.form.get('expected_swara_sequence')
+        if expected_swara_sequence:
+            lesson.expected_swara_sequence = expected_swara_sequence.strip()
+        else:
+            lesson.expected_swara_sequence = None
+            
         file = request.files.get('reference_audio')
         if file and file.filename != '':
             if allowed_file(file.filename):

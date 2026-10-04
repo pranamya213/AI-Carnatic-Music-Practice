@@ -50,6 +50,17 @@
                     </div>
 
                     <div class="mb-5">
+                        <h4 class="text-gold mb-3">Expected Swara Sequence</h4>
+                        <div class="p-3 border border-gold-muted rounded text-cream" style="background: rgba(0,0,0,0.2); font-size: 1.1rem; letter-spacing: 1px;">
+                            {% if lesson.expected_swara_sequence %}
+                                {{ lesson.expected_swara_sequence }}
+                            {% else %}
+                                <span class="text-muted-custom">Expected swara sequence not defined yet.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
                         <h4 class="text-gold mb-3">Description</h4>
                         <div class="text-cream" style="white-space: pre-wrap;">{{ lesson.description }}</div>
                     </div>

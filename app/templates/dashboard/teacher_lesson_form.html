@@ -85,9 +85,16 @@
                         </div>
 
                         <div class="mb-4">
+                            <label for="expected_swara_sequence" class="form-label text-gold">Expected Swara Sequence</label>
+                            <textarea class="form-control bg-dark text-cream border-gold-muted" id="expected_swara_sequence" name="expected_swara_sequence" rows="3"
+                                      placeholder="e.g. Sa Ri Ga Ma | Ri Ga Ma Pa | Ga Ma Pa Da | Ma Pa Da Ni">{{ lesson.expected_swara_sequence if lesson and lesson.expected_swara_sequence else '' }}</textarea>
+                            <div class="form-text text-muted-custom">Enter the expected swaras for this exercise. Use spaces between swaras and optionally use | to separate phrases.</div>
+                        </div>
+
+                        <div class="mb-4">
                             <label for="description" class="form-label text-gold">Description</label>
                             <textarea class="form-control bg-dark text-cream border-gold-muted" id="description" name="description" rows="4"
-                                      placeholder="Practice the given swara sequence using the reference recording.">{{ lesson.description if lesson else '' }}</textarea>
+                                      placeholder="Practice the given swara sequence using the reference recording.">{{ lesson.description if lesson and lesson.description else '' }}</textarea>
                         </div>
 
                         <div class="mb-5 p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
