@@ -275,7 +275,37 @@
                     
                     {% if not is_teacher %}
                     <div class="mb-5">
-                        <h4 class="text-gold mb-3">🎤 Practice Recording</h4>
+                        <h4 class="text-gold mb-3">🎤 Live Practice</h4>
+                        <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                            <p class="text-cream mb-3">Practice this exercise using your microphone.</p>
+                            
+                            <div class="d-flex align-items-center mb-3">
+                                <button id="start-live-practice" class="btn btn-hero me-3">Start Live Practice</button>
+                                <button id="stop-live-practice" class="btn btn-outline-danger" style="display: none;">Stop Practice</button>
+                            </div>
+                            
+                            <div class="row text-cream mt-4">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <span class="text-muted-custom small d-block mb-1">Status</span>
+                                    <span id="live-mic-status">
+                                        <span class="text-secondary">●</span> Microphone not active
+                                    </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="text-muted-custom small d-block mb-1">Time</span>
+                                    <span id="live-timer" class="fs-5 text-gold">00:00</span>
+                                </div>
+                            </div>
+                            
+                            <div id="live-mic-message" class="text-muted-custom mt-3" style="display: none;">
+                                Microphone is listening...
+                            </div>
+                            <div id="live-mic-error" class="text-danger mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h4 class="text-gold mb-3">🎤 Upload Practice Recording</h4>
                         <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
                             <form action="{{ url_for('dashboard.upload_practice_recording', lesson_id=lesson.id) }}" method="POST" enctype="multipart/form-data" class="mb-4">
                                 <div class="mb-3">
@@ -406,4 +436,76 @@
     border-radius: 5px;
 }
 </style>
+
+{% if not is_teacher %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startBtn = document.getElementById('start-live-practice');
+        const stopBtn = document.getElementById('stop-live-practice');
+        const statusEl = document.getElementById('live-mic-status');
+        const timerEl = document.getElementById('live-timer');
+        const msgEl = document.getElementById('live-mic-message');
+        const errEl = document.getElementById('live-mic-error');
+        
+        let mediaStream = null;
+        let timerInterval = null;
+        let seconds = 0;
+        
+        if (startBtn && stopBtn) {
+            startBtn.addEventListener('click', async function() {
+                errEl.style.display = 'none';
+                try {
+                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    
+                    // Update UI
+                    startBtn.style.display = 'none';
+                    stopBtn.style.display = 'inline-block';
+                    statusEl.innerHTML = '<span class="text-danger">●</span> Microphone active';
+                    msgEl.style.display = 'block';
+                    msgEl.textContent = 'Microphone is listening...';
+                    
+                    // Start timer
+                    seconds = 0;
+                    timerEl.textContent = '00:00';
+                    timerInterval = setInterval(() => {
+                        seconds++;
+                        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                        const secs = (seconds % 60).toString().padStart(2, '0');
+                        timerEl.textContent = `${mins}:${secs}`;
+                    }, 1000);
+                    
+                } catch (err) {
+                    errEl.style.display = 'block';
+                    if (err.name === 'NotAllowedError') {
+                        errEl.textContent = 'Microphone permission was denied. Please allow microphone access in your browser and try again.';
+                    } else if (err.name === 'NotFoundError') {
+                        errEl.textContent = 'No microphone found on your device.';
+                    } else {
+                        errEl.textContent = 'Could not access microphone: ' + err.message;
+                    }
+                }
+            });
+            
+            stopBtn.addEventListener('click', function() {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                    mediaStream = null;
+                }
+                
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                
+                // Update UI
+                stopBtn.style.display = 'none';
+                startBtn.style.display = 'inline-block';
+                statusEl.innerHTML = '<span class="text-secondary">●</span> Microphone not active';
+                msgEl.textContent = 'Live practice stopped.';
+            });
+        }
+    });
+</script>
+{% endif %}
+
 {% endblock %}
