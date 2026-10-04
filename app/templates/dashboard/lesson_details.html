@@ -285,13 +285,17 @@
                             </div>
                             
                             <div class="row text-cream mt-4">
-                                <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="col-md-4 mb-3 mb-md-0">
                                     <span class="text-muted-custom small d-block mb-1">Status</span>
                                     <span id="live-mic-status">
-                                        <span class="text-secondary">●</span> Microphone not active
+                                        <span class="text-secondary">●</span> Inactive
                                     </span>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <span class="text-muted-custom small d-block mb-1">Current Pitch</span>
+                                    <span id="live-pitch" class="fs-5 text-gold">-- Hz</span>
+                                </div>
+                                <div class="col-md-4">
                                     <span class="text-muted-custom small d-block mb-1">Time</span>
                                     <span id="live-timer" class="fs-5 text-gold">00:00</span>
                                 </div>
@@ -439,6 +443,79 @@
 
 {% if not is_teacher %}
 <script>
+    // --- Pitch Detection Configuration ---
+    // Adjustable constants for noise filtering and pitch stability
+    const MIN_RMS_THRESHOLD = 0.015;             // Minimum amplitude/energy to attempt detection
+    const MIN_AUTOCORRELATION_CONFIDENCE = 0.8;  // 0.0 to 1.0, lowered from 0.9 to better capture natural singing
+    const MIN_PITCH_HZ = 80;                     // Lowest expected singing frequency
+    const MAX_PITCH_HZ = 1000;                   // Highest expected singing frequency
+    const SMOOTHING_FACTOR = 0.8;                // Exponential moving average smoothing
+    
+    // Stability filtering
+    const STABLE_FRAMES_REQUIRED = 2;            // Consecutive frames required to lock onto a pitch (lowered from 3)
+    const MAX_PITCH_JUMP_PERCENT = 0.25;         // Max 25% frequency jump allowed between frames (increased from 15%)
+    // -------------------------------------
+
+    // Autocorrelation algorithm for pitch detection with confidence measure
+    function autoCorrelate(buf, sampleRate) {
+        let size = buf.length;
+        let rms = 0;
+
+        // Calculate RMS (volume/energy)
+        for (let i = 0; i < size; i++) {
+            let val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / size);
+        
+        // Amplitude / Noise threshold check
+        if (rms < MIN_RMS_THRESHOLD) return { pitch: -1, confidence: 0, rms: rms };
+
+        let r1 = 0, r2 = size - 1, thres = 0.2;
+        for (let i = 0; i < size / 2; i++)
+            if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+        for (let i = 1; i < size / 2; i++)
+            if (Math.abs(buf[size - i]) < thres) { r2 = size - i; break; }
+
+        buf = buf.slice(r1, r2);
+        size = buf.length;
+        if (size === 0) return { pitch: -1, confidence: 0, rms: rms };
+
+        let c = new Array(size).fill(0);
+        for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size - i; j++) {
+                c[i] = c[i] + buf[j] * buf[j + i];
+            }
+        }
+
+        let d = 0;
+        while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < size; i++) {
+            if (c[i] > maxval) {
+                maxval = c[i];
+                maxpos = i;
+            }
+        }
+        
+        // Periodicity / Autocorrelation Confidence check
+        let confidence = 0;
+        if (c[0] > 0) {
+            confidence = maxval / c[0];
+        }
+
+        let T0 = maxpos;
+
+        // Interpolation for better precision
+        let x1 = c[T0 - 1], x2 = c[T0], x3 = c[T0 + 1];
+        let a = (x1 + x3 - 2 * x2) / 2;
+        let b = (x3 - x1) / 2;
+        if (a) T0 = T0 - b / (2 * a);
+
+        let pitch = sampleRate / T0;
+        return { pitch: pitch, confidence: confidence, rms: rms };
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const startBtn = document.getElementById('start-live-practice');
         const stopBtn = document.getElementById('stop-live-practice');
@@ -446,23 +523,119 @@
         const timerEl = document.getElementById('live-timer');
         const msgEl = document.getElementById('live-mic-message');
         const errEl = document.getElementById('live-mic-error');
+        const pitchEl = document.getElementById('live-pitch');
         
         let mediaStream = null;
         let timerInterval = null;
         let seconds = 0;
+
+        // Web Audio API context and nodes
+        let audioContext = null;
+        let analyser = null;
+        let sourceNode = null;
+        let animationFrameId = null;
+        let buf = new Float32Array(2048);
+        
+        // Pitch state tracking
+        let previousPitch = -1;
+        let candidatePitch = -1;
+        let stableFramesCount = 0;
+        
+        function updatePitch() {
+            if (!analyser) return;
+            
+            analyser.getFloatTimeDomainData(buf);
+            let result = autoCorrelate(buf, audioContext.sampleRate);
+            let pitch = result.pitch;
+            let confidence = result.confidence;
+            
+            if (pitch === -1 || confidence < MIN_AUTOCORRELATION_CONFIDENCE || pitch < MIN_PITCH_HZ || pitch > MAX_PITCH_HZ) {
+                // Signal is too weak, noisy, unperiodic, or out of range
+                pitchEl.innerHTML = '<span class="text-muted-custom fs-6">No clear pitch</span>';
+                msgEl.textContent = 'Listening...';
+                
+                // Reset stability tracker
+                stableFramesCount = 0;
+                previousPitch = -1;
+                candidatePitch = -1;
+            } else {
+                // We have a candidate pitch
+                if (previousPitch === -1) {
+                    // Start of a new note
+                    if (candidatePitch === -1) {
+                        candidatePitch = pitch;
+                        stableFramesCount = 1;
+                    } else {
+                        // Check if it's close to the candidate
+                        let jumpPercent = Math.abs(pitch - candidatePitch) / candidatePitch;
+                        if (jumpPercent < MAX_PITCH_JUMP_PERCENT) {
+                            stableFramesCount++;
+                            candidatePitch = (candidatePitch + pitch) / 2; // Average to improve initial estimate
+                        } else {
+                            // Too big a jump, restart candidate
+                            candidatePitch = pitch;
+                            stableFramesCount = 1;
+                        }
+                    }
+                    
+                    if (stableFramesCount >= STABLE_FRAMES_REQUIRED) {
+                        // Pitch is stable enough to lock and display
+                        previousPitch = candidatePitch;
+                        pitchEl.textContent = previousPitch.toFixed(1) + ' Hz';
+                        msgEl.textContent = 'Pitch detected successfully.';
+                    } else {
+                        pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Detecting pitch...</span>';
+                    }
+                } else {
+                    // We were already tracking a valid pitch
+                    let jumpPercent = Math.abs(pitch - previousPitch) / previousPitch;
+                    if (jumpPercent < MAX_PITCH_JUMP_PERCENT) {
+                        // Pitch is stable, smooth the display value
+                        pitch = previousPitch * SMOOTHING_FACTOR + pitch * (1 - SMOOTHING_FACTOR);
+                        previousPitch = pitch;
+                        pitchEl.textContent = pitch.toFixed(1) + ' Hz';
+                        msgEl.textContent = 'Pitch detected successfully.';
+                    } else {
+                        // Sudden frequency jump, treat as noise or start of new note
+                        previousPitch = -1;
+                        candidatePitch = pitch;
+                        stableFramesCount = 1;
+                        pitchEl.innerHTML = '<span class="text-muted-custom fs-6">No clear pitch</span>';
+                    }
+                }
+            }
+            
+            if (mediaStream) {
+                animationFrameId = requestAnimationFrame(updatePitch);
+            }
+        }
         
         if (startBtn && stopBtn) {
             startBtn.addEventListener('click', async function() {
                 errEl.style.display = 'none';
                 try {
+                    // Start audio context if needed
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioContext) {
+                        throw new Error("Web Audio API is not supported in this browser.");
+                    }
+                    audioContext = new AudioContext();
+                    
                     mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    
+                    // Set up analyser for pitch detection
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 2048;
+                    sourceNode = audioContext.createMediaStreamSource(mediaStream);
+                    sourceNode.connect(analyser);
                     
                     // Update UI
                     startBtn.style.display = 'none';
                     stopBtn.style.display = 'inline-block';
-                    statusEl.innerHTML = '<span class="text-danger">●</span> Microphone active';
+                    statusEl.innerHTML = '<span class="text-danger">●</span> Active';
                     msgEl.style.display = 'block';
                     msgEl.textContent = 'Microphone is listening...';
+                    pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Initializing...</span>';
                     
                     // Start timer
                     seconds = 0;
@@ -473,6 +646,10 @@
                         const secs = (seconds % 60).toString().padStart(2, '0');
                         timerEl.textContent = `${mins}:${secs}`;
                     }, 1000);
+                    
+                    // Start pitch detection loop
+                    previousPitch = -1;
+                    updatePitch();
                     
                 } catch (err) {
                     errEl.style.display = 'block';
@@ -487,6 +664,19 @@
             });
             
             stopBtn.addEventListener('click', function() {
+                // Stop pitch detection animation loop
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                
+                // Stop audio context
+                if (audioContext && audioContext.state !== 'closed') {
+                    audioContext.close();
+                    audioContext = null;
+                }
+                
+                // Stop microphone tracks
                 if (mediaStream) {
                     mediaStream.getTracks().forEach(track => track.stop());
                     mediaStream = null;
@@ -500,8 +690,9 @@
                 // Update UI
                 stopBtn.style.display = 'none';
                 startBtn.style.display = 'inline-block';
-                statusEl.innerHTML = '<span class="text-secondary">●</span> Microphone not active';
+                statusEl.innerHTML = '<span class="text-secondary">●</span> Inactive';
                 msgEl.textContent = 'Live practice stopped.';
+                pitchEl.textContent = '-- Hz';
             });
         }
     });
