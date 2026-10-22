@@ -284,7 +284,27 @@
                                 <button id="stop-live-practice" class="btn btn-outline-danger" style="display: none;">Stop Practice</button>
                             </div>
                             
-                            <div class="row text-cream mt-4">
+                            <div class="row align-items-end mb-4">
+                                <div class="col-md-4">
+                                    <label for="sa-frequency-input" class="text-muted-custom small d-block mb-1">Your Sa / Shruti</label>
+                                    <select id="sa-frequency-input" class="form-select bg-dark text-light border-secondary" data-default-shruti="{{ lesson.shruti }}">
+                                        <option value="261.63">C</option>
+                                        <option value="277.18">C#</option>
+                                        <option value="293.66">D</option>
+                                        <option value="311.13">D#</option>
+                                        <option value="329.63">E</option>
+                                        <option value="349.23">F</option>
+                                        <option value="369.99">F#</option>
+                                        <option value="392.00">G</option>
+                                        <option value="415.30">G#</option>
+                                        <option value="440.00">A</option>
+                                        <option value="466.16">A#</option>
+                                        <option value="493.88">B</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row text-cream mb-4">
                                 <div class="col-md-4 mb-3 mb-md-0">
                                     <span class="text-muted-custom small d-block mb-1">Status</span>
                                     <span id="live-mic-status">
@@ -298,6 +318,37 @@
                                 <div class="col-md-4">
                                     <span class="text-muted-custom small d-block mb-1">Time</span>
                                     <span id="live-timer" class="fs-5 text-gold">00:00</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-2">
+                                <h5 class="text-gold mb-3">Expected Swara Sequence</h5>
+                                {% if lesson.expected_swara_sequence %}
+                                    <div id="live-swara-sequence" class="p-3 border border-gold-muted rounded text-center text-cream fs-4" style="background: rgba(0,0,0,0.3); letter-spacing: 2px; line-height: 1.8; transition: all 0.3s ease;" data-sequence="{{ lesson.expected_swara_sequence }}">
+                                    </div>
+                                {% else %}
+                                    <div class="p-3 border border-gold-muted rounded text-center text-cream" style="background: rgba(0,0,0,0.3);">
+                                        <span class="text-muted-custom">No expected swara sequence has been added for this lesson.</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Real-time Pitch Detection Debug Panel -->
+                            <div class="mt-4 p-3 border border-secondary rounded" style="background: rgba(0,0,0,0.4);">
+                                <h6 class="text-muted-custom mb-3">Pitch Detection Debug Panel</h6>
+                                <div class="row text-cream small" style="font-family: monospace;">
+                                    <div class="col-md-6 mb-2">
+                                        <div>Selected Sa: <span id="debug-sel-sa" class="text-gold">--</span></div>
+                                        <div>Sa Frequency: <span id="debug-sa-hz" class="text-gold">--</span></div>
+                                        <div>Current Pitch: <span id="debug-pitch-hz" class="text-gold">--</span></div>
+                                        <div>Detected Swara: <span id="debug-det-swara" class="text-gold">--</span></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div>Detected Octave: <span id="debug-det-octave" class="text-gold">--</span></div>
+                                        <div>Generic Swara: <span id="debug-gen-swara" class="text-gold">--</span></div>
+                                        <div>Cents Diff: <span id="debug-cents-diff" class="text-gold">--</span></div>
+                                        <div>Valid Pitch: <span id="debug-valid-pitch" class="text-gold">NO</span></div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -386,7 +437,7 @@
                                                             {% endif %}
                                                             
                                                             <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST" class="mt-3">
-                                                                <div class="input-group input-group-sm w-50">
+                                                                <div class="input-group input-group-sm w-100">
                                                                     <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
                                                                     <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
                                                                     <button type="submit" class="btn btn-outline-gold">Re-compare</button>
@@ -396,7 +447,7 @@
                                                         {% elif attempt.comparison_status == 'Failed' %}
                                                             <p class="text-danger small mb-2">Previous comparison failed. Teacher reference swara analysis must be complete.</p>
                                                             <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST">
-                                                                <div class="input-group input-group-sm w-50">
+                                                                <div class="input-group input-group-sm w-100">
                                                                     <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
                                                                     <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
                                                                     <button type="submit" class="btn btn-sm btn-outline-gold">Compare</button>
@@ -405,7 +456,7 @@
                                                         {% else %}
                                                             <p class="text-muted-custom small mb-2">Not compared yet. Run comparison to see pitch and swara differences.</p>
                                                             <form action="{{ url_for('dashboard.compare_practice_attempt', lesson_id=lesson.id, attempt_id=attempt.id) }}" method="POST">
-                                                                <div class="input-group input-group-sm w-50">
+                                                                <div class="input-group input-group-sm w-100">
                                                                     <span class="input-group-text bg-dark text-muted-custom border-secondary">Your Shruti</span>
                                                                     <input type="text" name="student_shruti" class="form-control bg-dark text-light border-secondary" placeholder="e.g. C, C#, D" value="{{ lesson.shruti }}" required>
                                                                     <button type="submit" class="btn btn-sm btn-outline-gold">Compare with Teacher</button>
@@ -524,6 +575,79 @@
         const msgEl = document.getElementById('live-mic-message');
         const errEl = document.getElementById('live-mic-error');
         const pitchEl = document.getElementById('live-pitch');
+        const saFreqInput = document.getElementById('sa-frequency-input');
+        
+        const dbgSelSa = document.getElementById('debug-sel-sa');
+        const dbgSaHz = document.getElementById('debug-sa-hz');
+        const dbgPitchHz = document.getElementById('debug-pitch-hz');
+        const dbgDetSwara = document.getElementById('debug-det-swara');
+        const dbgDetOctave = document.getElementById('debug-det-octave');
+        const dbgGenSwara = document.getElementById('debug-gen-swara');
+        const dbgCentsDiff = document.getElementById('debug-cents-diff');
+        const dbgValidPitch = document.getElementById('debug-valid-pitch');
+        
+        const defaultShruti = saFreqInput ? saFreqInput.getAttribute('data-default-shruti') : null;
+        if (saFreqInput && defaultShruti) {
+            Array.from(saFreqInput.options).forEach(opt => {
+                if (opt.text === defaultShruti || opt.text === defaultShruti.replace('♯', '#')) {
+                    opt.selected = true;
+                }
+            });
+        }
+        if (saFreqInput) {
+            saFreqInput.addEventListener('change', function() {
+                baseOctaveOffset = null;
+            });
+        }
+
+        const swaraSeqEl = document.getElementById('live-swara-sequence');
+        if (swaraSeqEl) {
+            const rawSeq = swaraSeqEl.getAttribute('data-sequence');
+            if (rawSeq) {
+                const normalizedSeq = rawSeq.replace(/\|/g, ' | ');
+                const tokens = normalizedSeq.trim().split(/\s+/);
+                swaraSeqEl.innerHTML = '';
+                
+                tokens.forEach((token) => {
+                    if (token === '|') {
+                        const sep = document.createElement('span');
+                        sep.className = 'mx-2 text-muted-custom';
+                        sep.textContent = '|';
+                        swaraSeqEl.appendChild(sep);
+                    } else if (token.length > 0) {
+                        const span = document.createElement('span');
+                        span.className = 'swara-item px-2 py-1 mx-1 rounded d-inline-block text-cream';
+                        span.textContent = token;
+                        swaraSeqEl.appendChild(span);
+                    }
+                });
+            }
+        }
+
+        function clearUnvoicedDebug() {
+            if (dbgValidPitch) dbgValidPitch.textContent = 'NO';
+            if (dbgPitchHz) dbgPitchHz.textContent = '--';
+            if (dbgDetSwara) dbgDetSwara.textContent = '—';
+            if (dbgGenSwara) dbgGenSwara.textContent = '—';
+            if (dbgDetOctave) dbgDetOctave.textContent = '--';
+            if (dbgCentsDiff) dbgCentsDiff.textContent = '--';
+        }
+
+        function getGenericSwara(swara) {
+            if (!swara) return '';
+            const clean = swara.trim();
+            const swaraFamilies = {
+                'Sa': 'Sa', 'S': 'Sa', 'sa': 'Sa',
+                'Sa+': 'Sa+', 'S+': 'Sa+', 'sa+': 'Sa+',
+                'R1': 'Ri', 'R2': 'Ri', 'Ri': 'Ri', 'Re': 'Ri', 'R': 'Ri', 'ri': 'Ri',
+                'G2': 'Ga', 'G3': 'Ga', 'Ga': 'Ga', 'G': 'Ga', 'ga': 'Ga',
+                'M1': 'Ma', 'M2': 'Ma', 'Ma': 'Ma', 'M': 'Ma', 'ma': 'Ma',
+                'Pa': 'Pa', 'P': 'Pa', 'pa': 'Pa',
+                'D1': 'Da', 'D2': 'Da', 'Da': 'Da', 'Dha': 'Da', 'D': 'Da', 'da': 'Da', 'dha': 'Da',
+                'N2': 'Ni', 'N3': 'Ni', 'Ni': 'Ni', 'N': 'Ni', 'ni': 'Ni'
+            };
+            return swaraFamilies[clean] || clean;
+        }
         
         let mediaStream = null;
         let timerInterval = null;
@@ -540,7 +664,50 @@
         let previousPitch = -1;
         let candidatePitch = -1;
         let stableFramesCount = 0;
+        let baseOctaveOffset = null;
         
+        const SWARA_LABELS = ['Sa', 'R1', 'R2', 'G2', 'G3', 'M1', 'M2', 'Pa', 'D1', 'D2', 'N2', 'N3'];
+
+        function getSwaraFromPitch(pitch, saFreq) {
+            if (!saFreq || saFreq <= 0) return { swara: '—', octave: 0, rawOctave: 0, centsDiff: 0 };
+            
+            let ratio = pitch / saFreq;
+            let continuousSemitones = 12 * Math.log2(ratio);
+            
+            let nearestSemitone = Math.round(continuousSemitones);
+            
+            let pitchClass = ((nearestSemitone % 12) + 12) % 12;
+            let octaveOffset = Math.floor(nearestSemitone / 12);
+            
+            // Auto-detect lower-register singer if pitch is in an octave below the selected tonic (octave 4)
+            if (octaveOffset < 0 && (baseOctaveOffset === null || octaveOffset < baseOctaveOffset)) {
+                baseOctaveOffset = octaveOffset;
+            }
+            
+            let effectiveBaseOctave = baseOctaveOffset !== null ? baseOctaveOffset : 0;
+            let relativeOctave = octaveOffset - effectiveBaseOctave;
+            
+            let swara = SWARA_LABELS[pitchClass];
+            if (swara === 'Sa' && relativeOctave >= 1) {
+                swara = 'Sa+';
+            }
+            
+            let centsDiff = (continuousSemitones - nearestSemitone) * 100;
+            return { swara: swara, octave: relativeOctave, rawOctave: octaveOffset, centsDiff: centsDiff };
+        }
+        
+        function handleLockedPitch(lockedPitch, saFreq) {
+            if (!saFreq || saFreq <= 0 || isNaN(saFreq)) return;
+
+            let detectedSwaraObj = getSwaraFromPitch(lockedPitch, saFreq);
+            let detectedGenericSwara = getGenericSwara(detectedSwaraObj.swara);
+            
+            if (dbgDetSwara) dbgDetSwara.textContent = detectedSwaraObj.swara;
+            if (dbgDetOctave) dbgDetOctave.textContent = detectedSwaraObj.octave;
+            if (dbgGenSwara) dbgGenSwara.textContent = detectedGenericSwara;
+            if (dbgCentsDiff) dbgCentsDiff.textContent = detectedSwaraObj.centsDiff.toFixed(2);
+        }
+
         function updatePitch() {
             if (!analyser) return;
             
@@ -553,6 +720,7 @@
                 // Signal is too weak, noisy, unperiodic, or out of range
                 pitchEl.innerHTML = '<span class="text-muted-custom fs-6">No clear pitch</span>';
                 msgEl.textContent = 'Listening...';
+                clearUnvoicedDebug();
                 
                 // Reset stability tracker
                 stableFramesCount = 0;
@@ -582,9 +750,20 @@
                         // Pitch is stable enough to lock and display
                         previousPitch = candidatePitch;
                         pitchEl.textContent = previousPitch.toFixed(1) + ' Hz';
+                        
+                        let saFreq = parseFloat(saFreqInput.value);
+                        let saName = saFreqInput.options[saFreqInput.selectedIndex].text;
+                        
+                        if (dbgSelSa) dbgSelSa.textContent = saName;
+                        if (dbgSaHz) dbgSaHz.textContent = saFreq;
+                        if (dbgPitchHz) dbgPitchHz.textContent = previousPitch.toFixed(2);
+                        if (dbgValidPitch) dbgValidPitch.textContent = 'YES';
+                        
+                        handleLockedPitch(previousPitch, saFreq);
                         msgEl.textContent = 'Pitch detected successfully.';
                     } else {
                         pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Detecting pitch...</span>';
+                        clearUnvoicedDebug();
                     }
                 } else {
                     // We were already tracking a valid pitch
@@ -594,6 +773,16 @@
                         pitch = previousPitch * SMOOTHING_FACTOR + pitch * (1 - SMOOTHING_FACTOR);
                         previousPitch = pitch;
                         pitchEl.textContent = pitch.toFixed(1) + ' Hz';
+                        
+                        let saFreq = parseFloat(saFreqInput.value);
+                        let saName = saFreqInput.options[saFreqInput.selectedIndex].text;
+                        
+                        if (dbgSelSa) dbgSelSa.textContent = saName;
+                        if (dbgSaHz) dbgSaHz.textContent = saFreq;
+                        if (dbgPitchHz) dbgPitchHz.textContent = pitch.toFixed(2);
+                        if (dbgValidPitch) dbgValidPitch.textContent = 'YES';
+                        
+                        handleLockedPitch(pitch, saFreq);
                         msgEl.textContent = 'Pitch detected successfully.';
                     } else {
                         // Sudden frequency jump, treat as noise or start of new note
@@ -601,6 +790,7 @@
                         candidatePitch = pitch;
                         stableFramesCount = 1;
                         pitchEl.innerHTML = '<span class="text-muted-custom fs-6">No clear pitch</span>';
+                        clearUnvoicedDebug();
                     }
                 }
             }
@@ -636,6 +826,9 @@
                     msgEl.style.display = 'block';
                     msgEl.textContent = 'Microphone is listening...';
                     pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Initializing...</span>';
+                    
+                    baseOctaveOffset = null;
+                    clearUnvoicedDebug();
                     
                     // Start timer
                     seconds = 0;
@@ -693,6 +886,9 @@
                 statusEl.innerHTML = '<span class="text-secondary">●</span> Inactive';
                 msgEl.textContent = 'Live practice stopped.';
                 pitchEl.textContent = '-- Hz';
+                
+                baseOctaveOffset = null;
+                clearUnvoicedDebug();
             });
         }
     });

@@ -192,6 +192,79 @@ h1, h2, h3, h4, h5, h6, .serif-font {
     transform: translateY(-3px);
 }
 
+/* Golden & Hero Buttons */
+.btn-gold,
+.btn-hero {
+    background: linear-gradient(135deg, var(--antique-gold), #b37332);
+    color: var(--dark-brown) !important;
+    border: 1px solid var(--antique-gold);
+    border-radius: var(--border-radius);
+    padding: 0.6rem 1.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+    display: inline-block;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-decoration: none;
+    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.3);
+}
+
+.btn-gold:hover,
+.btn-hero:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(197, 160, 89, 0.6);
+    color: var(--dark-brown) !important;
+    background: linear-gradient(135deg, #d3b371, var(--antique-gold));
+}
+
+.btn-outline-gold {
+    background: rgba(197, 160, 89, 0.12);
+    color: var(--antique-gold) !important;
+    border: 1px solid var(--antique-gold) !important;
+    border-radius: var(--border-radius);
+    padding: 0.4rem 1.2rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+    display: inline-block;
+    opacity: 1 !important;
+    visibility: visible !important;
+    text-decoration: none;
+}
+
+.btn-outline-gold:hover {
+    background: var(--antique-gold);
+    color: var(--dark-brown) !important;
+    border-color: var(--antique-gold) !important;
+    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Permanent visibility for action controls and buttons across desktop, tablet, and mobile */
+.action-controls,
+.card-actions,
+.row-actions,
+.hover-actions,
+.hover-visible,
+.glass-card .btn,
+.comparison-section .btn {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure comparison input group is responsive and does not overlap on small screens */
+.comparison-section .input-group {
+    max-width: 480px;
+    width: 100% !important;
+}
+
+@media (min-width: 768px) {
+    .comparison-section .input-group {
+        width: 60% !important;
+    }
+}
+
 .nav-hover-gold:hover {
     color: var(--antique-gold) !important;
 }

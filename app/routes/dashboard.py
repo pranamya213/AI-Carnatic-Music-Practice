@@ -473,16 +473,37 @@ def upload_practice_recording(lesson_id):
         
     return redirect(url_for('dashboard.student_lesson_details', lesson_id=lesson.id))
 
-@dashboard_bp.route('/uploads/practice/<filename>')
+@dashboard_bp.route('/uploads/practice/<path:filename>')
 @login_required
-@role_required('student')
 def uploaded_practice_file(filename):
-    # Verify ownership before serving
-    attempt = PracticeAttempt.query.filter_by(practice_audio_filename=filename).first_or_404()
-    if attempt.student_id != current_user.id:
+    normalized_filename = filename.replace('\\', '/')
+    
+    # Verify ownership before serving (matches audio recording, comparison plot, or comparison data)
+    attempt = PracticeAttempt.query.filter(
+        (PracticeAttempt.practice_audio_filename == normalized_filename) |
+        (PracticeAttempt.comparison_plot_filename == normalized_filename) |
+        (PracticeAttempt.comparison_data_filename == normalized_filename) |
+        (PracticeAttempt.comparison_plot_filename == f"comparison/{normalized_filename}") |
+        (PracticeAttempt.comparison_data_filename == f"comparison/{normalized_filename}")
+    ).first_or_404()
+    
+    # Verify access permission: student who owns attempt, teacher of the lesson, or admin
+    if current_user.role == 'student':
+        if attempt.student_id != current_user.id:
+            abort(403)
+    elif current_user.role == 'teacher':
+        if attempt.lesson.teacher_id != current_user.id:
+            abort(403)
+    elif current_user.role == 'admin':
+        pass
+    else:
         abort(403)
+        
     practice_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'practice')
-    return send_from_directory(practice_dir, filename)
+    if not os.path.exists(os.path.join(practice_dir, normalized_filename)) and os.path.exists(os.path.join(practice_dir, 'comparison', normalized_filename)):
+        normalized_filename = f"comparison/{normalized_filename}"
+        
+    return send_from_directory(practice_dir, normalized_filename)
 
 @dashboard_bp.route('/student/lessons/<int:lesson_id>/practice/<int:attempt_id>/compare', methods=['POST'])
 @login_required
