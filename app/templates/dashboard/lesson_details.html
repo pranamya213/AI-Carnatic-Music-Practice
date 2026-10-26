@@ -73,7 +73,7 @@
                                     <span class="fs-4 d-block mb-2">&#9835;</span>
                                     <p class="mb-0">Listen to the reference recording before practicing.</p>
                                 </div>
-                                <audio controls class="w-100 mb-2 custom-audio-player">
+                                <audio id="teacher-reference-audio" controls class="w-100 mb-2 custom-audio-player">
                                     <source src="{{ url_for('dashboard.uploaded_file', filename=lesson.reference_audio_filename) }}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
@@ -356,6 +356,150 @@
                                 Microphone is listening...
                             </div>
                             <div id="live-mic-error" class="text-danger mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5" id="live-comparison-section">
+                        <h4 class="text-gold mb-3">🎵 Live Teacher–Student Audio Comparison</h4>
+                        <div class="p-4 border border-gold-muted rounded" style="background: rgba(0,0,0,0.2);">
+                            <p class="text-cream mb-3">Practice live in real time along with the teacher's reference recording.</p>
+
+                            <!-- Headphone Reminder Notice -->
+                            <div class="p-3 border border-secondary rounded mb-4" style="background: rgba(20, 25, 35, 0.5);">
+                                <div class="d-flex align-items-center">
+                                    <span class="fs-3 me-3">🎧</span>
+                                    <div>
+                                        <span class="text-gold fw-semibold small d-block">Headphones Strongly Recommended</span>
+                                        <span class="text-muted-custom small">Use earphones or headphones during live comparison to prevent teacher audio playback from bleeding into your microphone.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reference Data Status Card -->
+                            <div id="live-comp-status-card" class="p-3 border border-secondary rounded mb-3" style="background: rgba(0,0,0,0.3);">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-muted-custom small">Reference Analysis Status</span>
+                                    <span id="live-comp-status-badge" class="badge bg-secondary">
+                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style="width: 0.75rem; height: 0.75rem;"></span>
+                                        Loading reference data...
+                                    </span>
+                                </div>
+                                <div id="live-comp-status-message" class="text-cream small">
+                                    Fetching teacher reference swara analysis...
+                                </div>
+                            </div>
+
+                            <!-- Reference Metadata Panel (Populated on successful load) -->
+                            <div id="live-comp-metadata-panel" class="p-3 border border-gold-muted rounded mb-4" style="display: none; background: rgba(0,0,0,0.3);">
+                                <div class="row text-cream small g-3">
+                                    <div class="col-6 col-md-3">
+                                        <span class="text-muted-custom d-block mb-1">Tonic / Shruti</span>
+                                        <span id="live-comp-meta-shruti" class="text-gold fs-6">--</span>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <span class="text-muted-custom d-block mb-1">Tonic Frequency</span>
+                                        <span id="live-comp-meta-tonic-freq" class="text-gold fs-6">-- Hz</span>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <span class="text-muted-custom d-block mb-1">Duration</span>
+                                        <span id="live-comp-meta-duration" class="text-gold fs-6">--</span>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <span class="text-muted-custom d-block mb-1">Analysis Frames</span>
+                                        <span id="live-comp-meta-frames" class="text-gold fs-6">--</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Controls Bar -->
+                            <div class="d-flex flex-wrap align-items-center mb-4">
+                                <button id="start-live-comparison" class="btn btn-hero me-3">Start Live Comparison</button>
+                                <button id="stop-live-comparison" class="btn btn-outline-danger me-3" style="display: none;">Stop Comparison</button>
+
+                                <div class="form-check form-switch me-3 my-2 my-sm-0">
+                                    <input class="form-check-input" type="checkbox" id="play-reference-audio-toggle">
+                                    <label class="form-check-label text-cream small" for="play-reference-audio-toggle">
+                                        Play Reference Audio <span class="text-muted-custom">(Guided playback)</span>
+                                    </label>
+                                </div>
+
+                                <span id="live-comp-control-status" class="text-muted-custom small mt-2 mt-sm-0">
+                                    Comparison has not started yet.
+                                </span>
+                            </div>
+
+                            <!-- Real-time Live Comparison Display -->
+                            <div id="live-comp-hud" class="p-4 border border-gold-muted rounded mb-4" style="background: rgba(0,0,0,0.35);">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="text-gold mb-0 fs-6">Real-Time Pitch &amp; Swara Alignment</h5>
+                                    <span id="live-comp-pitch-status" class="badge bg-secondary px-3 py-2">
+                                        ● Inactive
+                                    </span>
+                                </div>
+
+                                <div class="row g-3 text-center mb-3">
+                                    <!-- Teacher Target Swara -->
+                                    <div class="col-md-4">
+                                        <div class="p-3 border border-secondary rounded h-100" style="background: rgba(0,0,0,0.25);">
+                                            <span class="text-muted-custom small d-block mb-1">Teacher Target Swara</span>
+                                            <span id="live-comp-target-swara" class="fs-2 text-gold fw-bold d-block">--</span>
+                                            <span id="live-comp-target-sub" class="text-muted-custom small">Awaiting start</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Student Detected Swara -->
+                                    <div class="col-md-4">
+                                        <div class="p-3 border border-secondary rounded h-100" style="background: rgba(0,0,0,0.25);">
+                                            <span class="text-muted-custom small d-block mb-1">Your Sung Swara</span>
+                                            <span id="live-comp-student-swara" class="fs-2 text-cream fw-bold d-block">--</span>
+                                            <span id="live-comp-student-sub" class="text-muted-custom small">-- Hz</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pitch Deviation & Tuning Status -->
+                                    <div class="col-md-4">
+                                        <div class="p-3 border border-secondary rounded h-100" style="background: rgba(0,0,0,0.25);">
+                                            <span class="text-muted-custom small d-block mb-1">Pitch Deviation</span>
+                                            <span id="live-comp-cents-diff" class="fs-2 text-gold fw-bold d-block">--</span>
+                                            <span id="live-comp-tuning-status" class="text-muted-custom small">Silence</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-2 rounded text-center small text-muted-custom" style="background: rgba(0,0,0,0.2);">
+                                    <span id="live-comp-hud-message">Comparison has not started yet. Click "Start Live Comparison" to begin.</span>
+                                </div>
+                            </div>
+
+                            <!-- End-of-Comparison Summary Panel (Initially Hidden) -->
+                            <div id="live-comp-summary-panel" class="p-4 border border-gold-muted rounded mb-4" style="display: none; background: rgba(0,0,0,0.35);">
+                                <h5 class="text-gold mb-3 fs-6">Session Comparison Summary</h5>
+                                <div class="row g-3 text-center mb-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border border-secondary rounded" style="background: rgba(0,0,0,0.25);">
+                                            <span class="text-muted-custom small d-block mb-1">Live Swara Match</span>
+                                            <span id="live-comp-summary-match" class="fs-3 text-success fw-bold">--%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 border border-secondary rounded" style="background: rgba(0,0,0,0.25);">
+                                            <span class="text-muted-custom small d-block mb-1">Average Pitch Deviation</span>
+                                            <span id="live-comp-summary-dev" class="fs-3 text-cream fw-bold">-- cents</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="live-comp-summary-feedback" class="text-center text-cream small">
+                                    Session summary will appear here once live comparison completes.
+                                </div>
+                            </div>
+
+                            <!-- Error Alert (Displayed on failure) -->
+                            <div id="live-comp-error-card" class="alert alert-warning border-warning text-light small mb-0" style="display: none; background: rgba(80, 50, 10, 0.4);">
+                                <div class="d-flex align-items-center">
+                                    <span class="fs-5 me-2">⚠️</span>
+                                    <span id="live-comp-error-text">Teacher reference swara data could not be loaded.</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -726,6 +870,10 @@
                 stableFramesCount = 0;
                 previousPitch = -1;
                 candidatePitch = -1;
+
+                if (isComparing) {
+                    processComparisonFrame(null, null, false);
+                }
             } else {
                 // We have a candidate pitch
                 if (previousPitch === -1) {
@@ -761,9 +909,18 @@
                         
                         handleLockedPitch(previousPitch, saFreq);
                         msgEl.textContent = 'Pitch detected successfully.';
+
+                        if (isComparing) {
+                            let detectedSwaraObj = getSwaraFromPitch(previousPitch, saFreq);
+                            processComparisonFrame(previousPitch, detectedSwaraObj, true);
+                        }
                     } else {
                         pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Detecting pitch...</span>';
                         clearUnvoicedDebug();
+
+                        if (isComparing) {
+                            processComparisonFrame(null, null, false);
+                        }
                     }
                 } else {
                     // We were already tracking a valid pitch
@@ -784,6 +941,11 @@
                         
                         handleLockedPitch(pitch, saFreq);
                         msgEl.textContent = 'Pitch detected successfully.';
+
+                        if (isComparing) {
+                            let detectedSwaraObj = getSwaraFromPitch(pitch, saFreq);
+                            processComparisonFrame(pitch, detectedSwaraObj, true);
+                        }
                     } else {
                         // Sudden frequency jump, treat as noise or start of new note
                         previousPitch = -1;
@@ -791,6 +953,10 @@
                         stableFramesCount = 1;
                         pitchEl.innerHTML = '<span class="text-muted-custom fs-6">No clear pitch</span>';
                         clearUnvoicedDebug();
+
+                        if (isComparing) {
+                            processComparisonFrame(null, null, false);
+                        }
                     }
                 }
             }
@@ -800,97 +966,1037 @@
             }
         }
         
+        async function startMicrophoneSession() {
+            if (mediaStream && audioContext && audioContext.state !== 'closed') {
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                return true;
+            }
+            errEl.style.display = 'none';
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) {
+                    throw new Error("Web Audio API is not supported in this browser.");
+                }
+                audioContext = new AudioContext();
+
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+                // Set up analyser for pitch detection
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                sourceNode = audioContext.createMediaStreamSource(mediaStream);
+                sourceNode.connect(analyser);
+
+                // Update UI
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                statusEl.innerHTML = '<span class="text-danger">●</span> Active';
+                msgEl.style.display = 'block';
+                msgEl.textContent = 'Microphone is listening...';
+                pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Initializing...</span>';
+
+                baseOctaveOffset = null;
+                clearUnvoicedDebug();
+
+                // Start timer
+                seconds = 0;
+                timerEl.textContent = '00:00';
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                    const secs = (seconds % 60).toString().padStart(2, '0');
+                    timerEl.textContent = `${mins}:${secs}`;
+                }, 1000);
+
+                // Start pitch detection loop
+                previousPitch = -1;
+                candidatePitch = -1;
+                stableFramesCount = 0;
+                updatePitch();
+                return true;
+            } catch (err) {
+                errEl.style.display = 'block';
+                if (err.name === 'NotAllowedError') {
+                    errEl.textContent = 'Microphone permission was denied. Please allow microphone access in your browser and try again.';
+                } else if (err.name === 'NotFoundError') {
+                    errEl.textContent = 'No microphone found on your device.';
+                } else {
+                    errEl.textContent = 'Could not access microphone: ' + err.message;
+                }
+                return false;
+            }
+        }
+
+        function stopMicrophoneSession() {
+            if (isComparing) {
+                stopLiveComparisonSession();
+            }
+
+            // Stop pitch detection animation loop
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
+            // Stop audio context
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+                audioContext = null;
+            }
+
+            // Stop microphone tracks
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            // Update UI
+            stopBtn.style.display = 'none';
+            startBtn.style.display = 'inline-block';
+            statusEl.innerHTML = '<span class="text-secondary">●</span> Inactive';
+            msgEl.textContent = 'Live practice stopped.';
+            pitchEl.textContent = '-- Hz';
+
+            baseOctaveOffset = null;
+            clearUnvoicedDebug();
+        }
+
         if (startBtn && stopBtn) {
             startBtn.addEventListener('click', async function() {
-                errEl.style.display = 'none';
-                try {
-                    // Start audio context if needed
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (!AudioContext) {
-                        throw new Error("Web Audio API is not supported in this browser.");
-                    }
-                    audioContext = new AudioContext();
-                    
-                    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    
-                    // Set up analyser for pitch detection
-                    analyser = audioContext.createAnalyser();
-                    analyser.fftSize = 2048;
-                    sourceNode = audioContext.createMediaStreamSource(mediaStream);
-                    sourceNode.connect(analyser);
-                    
-                    // Update UI
-                    startBtn.style.display = 'none';
-                    stopBtn.style.display = 'inline-block';
-                    statusEl.innerHTML = '<span class="text-danger">●</span> Active';
-                    msgEl.style.display = 'block';
-                    msgEl.textContent = 'Microphone is listening...';
-                    pitchEl.innerHTML = '<span class="text-muted-custom fs-6">Initializing...</span>';
-                    
-                    baseOctaveOffset = null;
-                    clearUnvoicedDebug();
-                    
-                    // Start timer
-                    seconds = 0;
-                    timerEl.textContent = '00:00';
-                    timerInterval = setInterval(() => {
-                        seconds++;
-                        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-                        const secs = (seconds % 60).toString().padStart(2, '0');
-                        timerEl.textContent = `${mins}:${secs}`;
-                    }, 1000);
-                    
-                    // Start pitch detection loop
-                    previousPitch = -1;
-                    updatePitch();
-                    
-                } catch (err) {
-                    errEl.style.display = 'block';
-                    if (err.name === 'NotAllowedError') {
-                        errEl.textContent = 'Microphone permission was denied. Please allow microphone access in your browser and try again.';
-                    } else if (err.name === 'NotFoundError') {
-                        errEl.textContent = 'No microphone found on your device.';
-                    } else {
-                        errEl.textContent = 'Could not access microphone: ' + err.message;
-                    }
+                if (isComparing) {
+                    stopLiveComparisonSession();
                 }
+                await startMicrophoneSession();
             });
             
             stopBtn.addEventListener('click', function() {
-                // Stop pitch detection animation loop
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-                
-                // Stop audio context
-                if (audioContext && audioContext.state !== 'closed') {
-                    audioContext.close();
-                    audioContext = null;
-                }
-                
-                // Stop microphone tracks
-                if (mediaStream) {
-                    mediaStream.getTracks().forEach(track => track.stop());
-                    mediaStream = null;
-                }
-                
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-                
-                // Update UI
-                stopBtn.style.display = 'none';
-                startBtn.style.display = 'inline-block';
-                statusEl.innerHTML = '<span class="text-secondary">●</span> Inactive';
-                msgEl.textContent = 'Live practice stopped.';
-                pitchEl.textContent = '-- Hz';
-                
-                baseOctaveOffset = null;
-                clearUnvoicedDebug();
+                stopMicrophoneSession();
             });
         }
+
+        // --- Live Teacher-Student Comparison: Engine & Handlers ---
+        const liveCompEndpoint = "{{ url_for('dashboard.student_lesson_reference_swara_data', lesson_id=lesson.id) }}";
+        const compBadge = document.getElementById('live-comp-status-badge');
+        const compMsg = document.getElementById('live-comp-status-message');
+        const compMetadataPanel = document.getElementById('live-comp-metadata-panel');
+        const compErrorCard = document.getElementById('live-comp-error-card');
+        const compErrorText = document.getElementById('live-comp-error-text');
+
+        const teacherAudio = document.getElementById('teacher-reference-audio') || document.querySelector('audio.custom-audio-player');
+        const startCompBtn = document.getElementById('start-live-comparison');
+        const stopCompBtn = document.getElementById('stop-live-comparison');
+        const playRefAudioToggle = document.getElementById('play-reference-audio-toggle');
+        const compControlStatus = document.getElementById('live-comp-control-status');
+        const compPitchStatus = document.getElementById('live-comp-pitch-status');
+        const compTargetSwara = document.getElementById('live-comp-target-swara');
+        const compTargetSub = document.getElementById('live-comp-target-sub');
+        const compStudentSwara = document.getElementById('live-comp-student-swara');
+        const compStudentSub = document.getElementById('live-comp-student-sub');
+        const compCentsDiff = document.getElementById('live-comp-cents-diff');
+        const compTuningStatus = document.getElementById('live-comp-tuning-status');
+        const compHudMessage = document.getElementById('live-comp-hud-message');
+        const compSummaryPanel = document.getElementById('live-comp-summary-panel');
+        const compSummaryMatch = document.getElementById('live-comp-summary-match');
+        const compSummaryDev = document.getElementById('live-comp-summary-dev');
+        const compSummaryFeedback = document.getElementById('live-comp-summary-feedback');
+
+        // Parse expected swara sequence from lesson
+        function parseExpectedSwaraSequence(raw) {
+            if (!raw || typeof raw !== 'string') return [];
+            const cleaned = raw.replace(/[|;,]/g, ' ').replace(/\r?\n/g, ' ');
+            const tokens = cleaned.trim().split(/\s+/);
+            return tokens.filter(t => t.length > 0 && t !== '|');
+        }
+
+        const rawExpectedSequence = `{{ lesson.expected_swara_sequence or '' }}`;
+        const parsedExpectedSwaras = parseExpectedSwaraSequence(rawExpectedSequence);
+
+        function getSwaraBaseFamily(swara) {
+            if (!swara || typeof swara !== 'string') return '';
+            const clean = swara.trim().replace(/^~/, '').toUpperCase();
+            if (clean === 'SA' || clean === 'SA+' || clean === 'SA-' || clean === 'S' || clean === 'S+' || clean === 'S-') return 'Sa';
+            if (clean.startsWith('R')) return 'Ri';
+            if (clean.startsWith('G')) return 'Ga';
+            if (clean.startsWith('M')) return 'Ma';
+            if (clean === 'PA' || clean === 'P') return 'Pa';
+            if (clean.startsWith('D')) return 'Da';
+            if (clean.startsWith('N')) return 'Ni';
+            return clean;
+        }
+
+        function swarasMatch(target, student) {
+            if (!target || !student) return false;
+            const tClean = target.trim().replace(/^~/, '');
+            const sClean = student.trim().replace(/^~/, '');
+            if (tClean.toLowerCase() === sClean.toLowerCase()) return true;
+            const tBase = getSwaraBaseFamily(tClean);
+            const sBase = getSwaraBaseFamily(sClean);
+            return tBase !== '' && tBase === sBase;
+        }
+
+        function highlightExpectedSwara(index) {
+            const seqEl = document.getElementById('live-swara-sequence');
+            if (!seqEl) return;
+            const items = seqEl.querySelectorAll('.swara-item');
+            items.forEach((item, idx) => {
+                if (idx === index) {
+                    item.style.backgroundColor = 'rgba(218, 165, 32, 0.4)';
+                    item.style.outline = '2px solid #e5c07b';
+                    item.style.color = '#fff';
+                    item.style.fontWeight = 'bold';
+                } else if (idx < index) {
+                    item.style.backgroundColor = 'rgba(40, 167, 69, 0.25)';
+                    item.style.outline = '1px solid #28a745';
+                    item.style.color = '#a3e635';
+                    item.style.fontWeight = 'normal';
+                } else {
+                    item.style.backgroundColor = 'transparent';
+                    item.style.outline = 'none';
+                    item.style.color = '#f8f9fa';
+                    item.style.fontWeight = 'normal';
+                }
+            });
+        }
+
+        function clearExpectedSwaraHighlights() {
+            const seqEl = document.getElementById('live-swara-sequence');
+            if (!seqEl) return;
+            const items = seqEl.querySelectorAll('.swara-item');
+            items.forEach(item => {
+                item.style.backgroundColor = 'transparent';
+                item.style.outline = 'none';
+                item.style.color = '#f8f9fa';
+                item.style.fontWeight = 'normal';
+            });
+        }
+
+        let teacherReferenceData = null;
+        let isComparing = false;
+        let isGuidedModeActive = false;
+
+        // Self-paced mode tracking (Phase 1)
+        let selfPacedIndex = 0;
+        let selfPacedDwellStartTime = null;
+        let selfPacedLastMatchTime = null;
+        let selfPacedMismatchStartTime = null;
+        let selfPacedAdvancementTime = null;
+        let selfPacedValidHoldMs = 0;
+        let lastSelfPacedDiagLogTime = 0;
+        let lastSelfPacedDiagState = '';
+        const SELF_PACED_HOLD_MS = 600; // ~0.6 seconds steady hold required to advance
+        const SELF_PACED_DROPOUT_GRACE_MS = 250; // Grace window (ms) to prevent brief unvoiced mic dropouts from resetting hold timer
+        const SELF_PACED_MISMATCH_GRACE_MS = 150; // Grace window (ms) to tolerate brief voiced pitch wobbles without resetting hold timer
+        const SELF_PACED_NEAR_COMPLETE_HOLD_MS = 550; // Near-complete hold tolerance (ms) allowing brief unvoiced dropout to complete note
+        let selfPacedStats = {
+            matchedNotes: 0,
+            totalNotes: 0,
+            sumDeviationCents: 0,
+            deviationSamples: 0
+        };
+
+        // Guided mode tracking (Phase 2)
+        let guidedStats = {
+            voicedTeacherFrames: 0,
+            matchedSwaraFrames: 0,
+            sumDeviationCents: 0,
+            deviationSamples: 0
+        };
+        let guidedMismatchStartTime = null;
+        const GUIDED_MISMATCH_THRESHOLD_MS = 130; // 130ms hysteresis to avoid flicker
+
+        function normalizeCentsToOctave(cents) {
+            if (cents === null || isNaN(cents)) return 0;
+            let c = cents % 1200;
+            if (c < 0) c += 1200;
+            return c;
+        }
+
+        function getTeacherFrameAtTime(currentTime) {
+            if (!teacherReferenceData || !teacherReferenceData.frames || teacherReferenceData.frames.length === 0) {
+                return null;
+            }
+            const frames = teacherReferenceData.frames;
+            if (currentTime <= 0) return frames[0];
+            if (currentTime >= frames[frames.length - 1].time) return frames[frames.length - 1];
+
+            const hopTime = 256 / 22050; // ~0.01161 s
+            let idx = Math.floor(currentTime / hopTime);
+            if (idx < 0) idx = 0;
+            if (idx >= frames.length) idx = frames.length - 1;
+
+            if (Math.abs(frames[idx].time - currentTime) > 0.05) {
+                let low = 0, high = frames.length - 1;
+                while (low <= high) {
+                    const mid = Math.floor((low + high) / 2);
+                    if (frames[mid].time < currentTime) {
+                        low = mid + 1;
+                    } else {
+                        high = mid - 1;
+                    }
+                }
+                idx = Math.min(Math.max(low, 0), frames.length - 1);
+            }
+            return frames[idx];
+        }
+
+        function getAdjacentSustainedSwara(currentTime, windowSec = 0.35) {
+            if (!teacherReferenceData || !teacherReferenceData.frames) return { prev: null, next: null };
+            const frames = teacherReferenceData.frames;
+            const hopTime = 256 / 22050;
+            const centerIdx = Math.floor(currentTime / hopTime);
+            const windowFrames = Math.floor(windowSec / hopTime);
+
+            let prev = null;
+            let next = null;
+            for (let i = centerIdx - 1; i >= Math.max(0, centerIdx - windowFrames); i--) {
+                const f = frames[i];
+                if (f && f.swara && f.frequency > 0) {
+                    const s = f.swara.replace(/^~/, '').trim();
+                    if (s) {
+                        prev = s;
+                        break;
+                    }
+                }
+            }
+
+            for (let i = centerIdx + 1; i <= Math.min(frames.length - 1, centerIdx + windowFrames); i++) {
+                const f = frames[i];
+                if (f && f.swara && f.frequency > 0) {
+                    const s = f.swara.replace(/^~/, '').trim();
+                    if (s) {
+                        next = s;
+                        break;
+                    }
+                }
+            }
+
+            return { prev, next };
+        }
+
+        function processComparisonFrame(studentPitch, studentSwaraObj, isStudentVoiced) {
+            if (!isComparing) return;
+
+            if (isGuidedModeActive) {
+                processGuidedComparisonFrame(studentPitch, studentSwaraObj, isStudentVoiced);
+            } else {
+                processSelfPacedComparisonFrame(studentPitch, studentSwaraObj, isStudentVoiced);
+            }
+        }
+
+        // --- Phase 1: Self-Paced Comparison Engine (Default, Audio Paused) ---
+        function processSelfPacedComparisonFrame(studentPitch, studentSwaraObj, isStudentVoiced) {
+            if (!parsedExpectedSwaras || parsedExpectedSwaras.length === 0) return;
+            if (selfPacedIndex >= parsedExpectedSwaras.length) return;
+
+            const now = performance.now();
+            const currentTarget = parsedExpectedSwaras[selfPacedIndex];
+            const isConsecutiveRepeat = (selfPacedIndex > 0 && swarasMatch(currentTarget, parsedExpectedSwaras[selfPacedIndex - 1]));
+            const repeatTag = isConsecutiveRepeat ? ' (Repeat)' : '';
+
+            if (compTargetSwara) compTargetSwara.textContent = currentTarget;
+            if (compTargetSub) compTargetSub.textContent = `Note ${selfPacedIndex + 1} of ${parsedExpectedSwaras.length}${repeatTag}`;
+            highlightExpectedSwara(selfPacedIndex);
+
+            const dropoutGraceActive = Boolean(selfPacedLastMatchTime && (now - selfPacedLastMatchTime <= SELF_PACED_DROPOUT_GRACE_MS));
+            const mismatchGraceActive = Boolean(selfPacedMismatchStartTime !== null && (now - selfPacedMismatchStartTime < SELF_PACED_MISMATCH_GRACE_MS));
+            const currentHoldMs = Math.round(selfPacedValidHoldMs);
+            const isNearCompleteHold = (selfPacedValidHoldMs >= SELF_PACED_NEAR_COMPLETE_HOLD_MS);
+            const dropoutElapsed = selfPacedLastMatchTime !== null ? Math.round(now - selfPacedLastMatchTime) : 0;
+            const mismatchElapsed = selfPacedMismatchStartTime !== null ? Math.round(now - selfPacedMismatchStartTime) : 0;
+
+            function logDiagnostic(action, reason, isMatchVal) {
+                const stateKey = `${selfPacedIndex}-${action}-${reason}`;
+                if (stateKey !== lastSelfPacedDiagState || now - lastSelfPacedDiagLogTime > 1500) {
+                    const studentLabel = studentSwaraObj ? studentSwaraObj.swara : 'None';
+                    const pitchLabel = studentPitch ? studentPitch.toFixed(1) + 'Hz' : 'Unvoiced';
+                    const mismatchStatus = selfPacedMismatchStartTime ? `${mismatchElapsed}ms/${SELF_PACED_MISMATCH_GRACE_MS}ms` : 'Inactive';
+                    console.log(`[Self-Paced Diagnostic] Target: [${selfPacedIndex + 1}/${parsedExpectedSwaras.length} "${currentTarget}"${repeatTag}] | Sung: "${studentLabel}" (${pitchLabel}) | Match: ${Boolean(isMatchVal)} | ValidHold: ${currentHoldMs}ms/${SELF_PACED_HOLD_MS}ms | DropoutGrace: ${dropoutGraceActive ? 'Active' : 'Inactive'} | MismatchTimer: ${mismatchStatus} | Action: ${action} | Reason: ${reason}`);
+                    lastSelfPacedDiagState = stateKey;
+                    lastSelfPacedDiagLogTime = now;
+                }
+            }
+
+            function advanceSelfPacedTarget(action, reason, sampleDevCents = 0) {
+                selfPacedStats.matchedNotes++;
+                if (sampleDevCents !== null && !isNaN(sampleDevCents)) {
+                    selfPacedStats.sumDeviationCents += Math.abs(sampleDevCents);
+                    selfPacedStats.deviationSamples++;
+                }
+
+                logDiagnostic(action, reason, true);
+
+                selfPacedDwellStartTime = null;
+                selfPacedLastMatchTime = null;
+                selfPacedMismatchStartTime = null;
+                selfPacedAdvancementTime = now;
+                selfPacedValidHoldMs = 0;
+                selfPacedIndex++;
+
+                if (selfPacedIndex >= parsedExpectedSwaras.length) {
+                    // Sequence completed!
+                    stopLiveComparisonSession();
+                    return;
+                }
+
+                highlightExpectedSwara(selfPacedIndex);
+                const nextTarget = parsedExpectedSwaras[selfPacedIndex];
+                const nextIsRepeat = swarasMatch(nextTarget, currentTarget);
+                if (compTargetSwara) compTargetSwara.textContent = nextTarget;
+                if (compTargetSub) compTargetSub.textContent = `Note ${selfPacedIndex + 1} of ${parsedExpectedSwaras.length}${nextIsRepeat ? ' (Repeat)' : ''}`;
+                if (compHudMessage) {
+                    compHudMessage.textContent = nextIsRepeat
+                        ? `Great! Now sing ${nextTarget} again for Note ${selfPacedIndex + 1} of ${parsedExpectedSwaras.length}.`
+                        : `Well done! Now sing ${nextTarget}.`;
+                }
+            }
+
+            if (!isStudentVoiced || !studentPitch || !studentSwaraObj) {
+                // Student silent / unvoiced frame
+                // A voiced mismatch cannot be active during unvoiced silence
+                selfPacedMismatchStartTime = null;
+
+                if (selfPacedLastMatchTime && (now - selfPacedLastMatchTime > SELF_PACED_DROPOUT_GRACE_MS)) {
+                    // Unvoiced silence exceeded 250ms dropout grace - reset hold
+                    logDiagnostic('RESET_SILENCE', `Unvoiced silence exceeded ${SELF_PACED_DROPOUT_GRACE_MS}ms dropout grace (hold of ${currentHoldMs}ms reset to 0ms)`, false);
+                    selfPacedDwellStartTime = null;
+                    selfPacedLastMatchTime = null;
+                    selfPacedValidHoldMs = 0;
+                } else if (dropoutGraceActive) {
+                    if (isNearCompleteHold) {
+                        logDiagnostic('HOLDING_GRACE', `Near-complete hold of ${currentHoldMs}ms (>= ${SELF_PACED_NEAR_COMPLETE_HOLD_MS}ms tolerance) preserved during brief unvoiced dropout (${dropoutElapsed}ms / ${SELF_PACED_DROPOUT_GRACE_MS}ms)`, false);
+                    } else {
+                        logDiagnostic('HOLDING_GRACE', `Unvoiced frame within ${SELF_PACED_DROPOUT_GRACE_MS}ms dropout grace window (hold preserved: ${currentHoldMs}ms)`, false);
+                    }
+                }
+
+                if (compStudentSwara) compStudentSwara.textContent = '—';
+                if (compStudentSub) compStudentSub.textContent = 'No voice detected';
+                if (compCentsDiff) compCentsDiff.textContent = '--';
+                if (compTuningStatus) compTuningStatus.textContent = 'Awaiting your note';
+                if (compPitchStatus) {
+                    compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                    compPitchStatus.textContent = '● Awaiting Note';
+                }
+                if (compHudMessage) {
+                    compHudMessage.textContent = isConsecutiveRepeat
+                        ? `Sing ${currentTarget} again for Note ${selfPacedIndex + 1} of ${parsedExpectedSwaras.length}.`
+                        : `Sing ${currentTarget} steadily to match.`;
+                }
+                return;
+            }
+
+            // Student voiced
+            const studentSwara = studentSwaraObj.swara;
+            if (compStudentSwara) compStudentSwara.textContent = studentSwara;
+            if (compStudentSub) compStudentSub.textContent = studentPitch.toFixed(1) + ' Hz';
+
+            const devCents = studentSwaraObj.centsDiff || 0;
+            const signedCentsStr = (devCents >= 0 ? '+' : '') + devCents.toFixed(0) + '¢';
+            if (compCentsDiff) compCentsDiff.textContent = signedCentsStr;
+
+            const isMatch = swarasMatch(currentTarget, studentSwara);
+
+            if (isMatch) {
+                // Matching note detected: clear mismatch grace timer immediately
+                const wasInMismatch = (selfPacedMismatchStartTime !== null);
+                selfPacedMismatchStartTime = null;
+
+                if (selfPacedLastMatchTime === null) {
+                    // First matching frame of this streak
+                    selfPacedLastMatchTime = now;
+                    if (selfPacedDwellStartTime === null) {
+                        selfPacedDwellStartTime = now;
+                    }
+                } else {
+                    const delta = now - selfPacedLastMatchTime;
+                    // Only accumulate delta between consecutive active matching frames.
+                    // If returning from mismatch or dropout (> 80ms), do not accumulate the gap!
+                    if (!wasInMismatch && delta > 0 && delta <= 80) {
+                        selfPacedValidHoldMs += delta;
+                    }
+                    selfPacedLastMatchTime = now;
+                }
+
+                const updatedHoldMs = selfPacedValidHoldMs;
+                const progressPct = Math.min(100, Math.round((updatedHoldMs / SELF_PACED_HOLD_MS) * 100));
+
+                if (Math.abs(devCents) <= 35) {
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-success px-3 py-2';
+                        compPitchStatus.textContent = '● In Tune';
+                    }
+                    if (compTuningStatus) compTuningStatus.textContent = 'In Tune (Hold steady)';
+                } else if (devCents > 35) {
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = `● Sharp (${signedCentsStr})`;
+                    }
+                    if (compTuningStatus) compTuningStatus.textContent = 'Slightly Sharp';
+                } else {
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = `● Flat (${signedCentsStr})`;
+                    }
+                    if (compTuningStatus) compTuningStatus.textContent = 'Slightly Flat';
+                }
+
+                if (compHudMessage) {
+                    const repeatHint = isConsecutiveRepeat ? ` (Note ${selfPacedIndex + 1}/${parsedExpectedSwaras.length})` : '';
+                    compHudMessage.textContent = `Holding ${currentTarget}${repeatHint}: ${progressPct}% (hold for 0.6s to advance)`;
+                }
+
+                if (updatedHoldMs >= SELF_PACED_HOLD_MS) {
+                    // Valid match held steadily for full 600 ms!
+                    advanceSelfPacedTarget(
+                        'ADVANCED',
+                        `Steady 600ms hold completed for "${currentTarget}" (valid hold: ${Math.round(updatedHoldMs)}ms)`,
+                        devCents
+                    );
+                    return;
+                } else {
+                    logDiagnostic('HOLDING', `Holding in tune (${progressPct}%), ${Math.round(SELF_PACED_HOLD_MS - updatedHoldMs)}ms remaining to advance`, true);
+                }
+            } else {
+                // Voiced mismatch: sung swara does NOT match currentTarget
+
+                if (selfPacedMismatchStartTime === null) {
+                    selfPacedMismatchStartTime = now;
+                }
+                const mismatchDuration = now - selfPacedMismatchStartTime;
+
+                if (mismatchDuration < SELF_PACED_MISMATCH_GRACE_MS) {
+                    // Within 150ms mismatch grace period: preserve existing valid dwell time
+                    logDiagnostic('MISMATCH_GRACE', `Voiced mismatch within 150ms grace (${Math.round(mismatchDuration)}ms / ${SELF_PACED_MISMATCH_GRACE_MS}ms): expected "${currentTarget}", detected "${studentSwara}" (hold preserved at ${Math.round(selfPacedValidHoldMs)}ms)`, false);
+
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                        compPitchStatus.textContent = '● Verifying...';
+                    }
+                    if (compTuningStatus) compTuningStatus.textContent = `Aligning ${currentTarget}...`;
+                    if (compHudMessage) compHudMessage.textContent = `Stabilize your pitch on ${currentTarget}.`;
+                } else {
+                    // Mismatch has persisted for >= 150ms: genuine wrong note
+                    logDiagnostic('REJECTED_MISMATCH', `Voiced mismatch persisted for ${Math.round(mismatchDuration)}ms >= ${SELF_PACED_MISMATCH_GRACE_MS}ms: expected "${currentTarget}", sang "${studentSwara}" (hold of ${Math.round(selfPacedValidHoldMs)}ms reset to 0ms)`, false);
+
+                    selfPacedValidHoldMs = 0;
+                    selfPacedDwellStartTime = null;
+                    selfPacedLastMatchTime = null;
+
+                    if (compTuningStatus) {
+                        compTuningStatus.textContent = isConsecutiveRepeat
+                            ? `Expected ${currentTarget} (Repeat), sang ${studentSwara}`
+                            : `Expected ${currentTarget}, sang ${studentSwara}`;
+                    }
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-danger px-3 py-2';
+                        compPitchStatus.textContent = '● Wrong Note';
+                    }
+                    if (compHudMessage) {
+                        compHudMessage.textContent = isConsecutiveRepeat
+                            ? `Note ${selfPacedIndex + 1} is a repeat of ${currentTarget}. Focus on singing ${currentTarget}.`
+                            : `Pitch off target. Focus on singing ${currentTarget}.`;
+                    }
+                }
+            }
+        }
+
+        // --- Phase 2: Guided Comparison Engine (Optional Reference Playback) ---
+        function processGuidedComparisonFrame(studentPitch, studentSwaraObj, isStudentVoiced) {
+            if (!teacherAudio || teacherAudio.paused || teacherAudio.ended) return;
+            if (!teacherReferenceData || !teacherReferenceData.frames) return;
+
+            const currentTime = teacherAudio.currentTime;
+            const teacherFrame = getTeacherFrameAtTime(currentTime);
+            if (!teacherFrame) return;
+
+            const tFreq = teacherFrame.frequency;
+            const tSwara = teacherFrame.swara;
+            const tCents = teacherFrame.cents_from_tonic;
+            const tOctave = teacherFrame.octave;
+
+            let isTeacherVoiced = (tFreq !== null && tFreq > 0 && tSwara !== null && tSwara !== '');
+
+            // Drone detection without hardcoding 110 Hz:
+            // If octave is < 0 and swara is S during a pause between other notes, treat as pause/drone
+            if (isTeacherVoiced && tOctave < 0 && (tSwara === 'S' || tSwara === '~S')) {
+                const { prev, next } = getAdjacentSustainedSwara(currentTime, 0.35);
+                if (prev && next && getGenericSwara(prev) !== 'Sa' && getGenericSwara(next) !== 'Sa') {
+                    isTeacherVoiced = false;
+                }
+            }
+
+            // Case 1: Teacher frame is unvoiced / rest
+            if (!isTeacherVoiced) {
+                guidedMismatchStartTime = null;
+                if (compTargetSwara) compTargetSwara.textContent = '—';
+                if (compTargetSub) compTargetSub.textContent = 'Pause / Rest';
+
+                if (isStudentVoiced && studentSwaraObj) {
+                    if (compStudentSwara) compStudentSwara.textContent = studentSwaraObj.swara;
+                    if (compStudentSub) compStudentSub.textContent = studentPitch.toFixed(1) + ' Hz';
+                    if (compCentsDiff) compCentsDiff.textContent = '--';
+                    if (compTuningStatus) compTuningStatus.textContent = 'Singing during rest';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = '● Teacher Paused';
+                    }
+                    if (compHudMessage) compHudMessage.textContent = 'Teacher is pausing. Rest your voice until the next note.';
+                } else {
+                    if (compStudentSwara) compStudentSwara.textContent = '—';
+                    if (compStudentSub) compStudentSub.textContent = 'Silent';
+                    if (compCentsDiff) compCentsDiff.textContent = '--';
+                    if (compTuningStatus) compTuningStatus.textContent = 'Silence (In Tune)';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                        compPitchStatus.textContent = '● Pause / Silent';
+                    }
+                    if (compHudMessage) compHudMessage.textContent = 'Both silent during rest.';
+                }
+                return;
+            }
+
+            // Case 2: Teacher is singing (voiced)
+            guidedStats.voicedTeacherFrames++;
+
+            const cleanTeacherSwara = tSwara.replace(/^~/, '').trim();
+            const genericTeacherSwara = getGenericSwara(cleanTeacherSwara);
+            if (compTargetSwara) compTargetSwara.textContent = cleanTeacherSwara;
+            if (compTargetSub) compTargetSub.textContent = `Target: ${genericTeacherSwara} (${tFreq.toFixed(1)} Hz)`;
+
+            if (!isStudentVoiced || !studentPitch || !studentSwaraObj) {
+                guidedMismatchStartTime = null;
+                if (compStudentSwara) compStudentSwara.textContent = '—';
+                if (compStudentSub) compStudentSub.textContent = 'No voice detected';
+                if (compCentsDiff) compCentsDiff.textContent = '--';
+                if (compTuningStatus) compTuningStatus.textContent = 'Awaiting your note';
+                if (compPitchStatus) {
+                    compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                    compPitchStatus.textContent = '● Silence';
+                }
+                if (compHudMessage) compHudMessage.textContent = `Sing ${cleanTeacherSwara} along with the teacher recording.`;
+                return;
+            }
+
+            // Case 3: Both teacher and student are singing (voiced)
+            const studentSwara = studentSwaraObj.swara;
+            const genericStudentSwara = getGenericSwara(studentSwara);
+
+            if (compStudentSwara) compStudentSwara.textContent = studentSwara;
+            if (compStudentSub) compStudentSub.textContent = studentPitch.toFixed(1) + ' Hz';
+
+            const saFreq = parseFloat(saFreqInput.value);
+            const studentCentsFromTonic = 1200 * Math.log2(studentPitch / saFreq);
+
+            let diffCents = normalizeCentsToOctave(studentCentsFromTonic) - normalizeCentsToOctave(tCents);
+            if (diffCents > 600) diffCents -= 1200;
+            if (diffCents < -600) diffCents += 1200;
+
+            const signedCentsStr = (diffCents >= 0 ? '+' : '') + diffCents.toFixed(0) + '¢';
+            if (compCentsDiff) compCentsDiff.textContent = signedCentsStr;
+
+            const isExactMatch = (cleanTeacherSwara === studentSwara ||
+                                 (cleanTeacherSwara === 'S' && (studentSwara === 'Sa' || studentSwara === 'Sa+')) ||
+                                 (cleanTeacherSwara === 'P' && studentSwara === 'Pa'));
+            const isGenericMatch = (genericTeacherSwara && genericStudentSwara && genericTeacherSwara === genericStudentSwara);
+
+            if (isExactMatch || isGenericMatch) {
+                // Successful pitch and swara match
+                guidedMismatchStartTime = null;
+                guidedStats.matchedSwaraFrames++;
+                guidedStats.sumDeviationCents += Math.abs(diffCents);
+                guidedStats.deviationSamples++;
+
+                if (Math.abs(diffCents) <= 35) {
+                    if (compTuningStatus) compTuningStatus.textContent = 'In Tune (Accurate)';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-success px-3 py-2';
+                        compPitchStatus.textContent = '● In Tune';
+                    }
+                    if (compHudMessage) compHudMessage.textContent = `Spot on! Matching ${cleanTeacherSwara} with accurate pitch.`;
+                } else if (diffCents > 35) {
+                    if (compTuningStatus) compTuningStatus.textContent = 'Slightly Sharp';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = `● Sharp (${signedCentsStr})`;
+                    }
+                    if (compHudMessage) compHudMessage.textContent = `Correct swara (${cleanTeacherSwara}), but sharp. Lower your pitch slightly.`;
+                } else {
+                    if (compTuningStatus) compTuningStatus.textContent = 'Slightly Flat';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = `● Flat (${signedCentsStr})`;
+                    }
+                    if (compHudMessage) compHudMessage.textContent = `Correct swara (${cleanTeacherSwara}), but flat. Raise your pitch slightly.`;
+                }
+            } else {
+                // Inspect transition tolerance: check adjacent sustained swara within 0.35s
+                const { prev, next } = getAdjacentSustainedSwara(currentTime, 0.35);
+                const genericPrev = getGenericSwara(prev);
+                const genericNext = getGenericSwara(next);
+
+                if ((genericPrev && genericStudentSwara === genericPrev) ||
+                    (genericNext && genericStudentSwara === genericNext)) {
+                    // Valid human note transition
+                    guidedMismatchStartTime = null;
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-info text-dark px-3 py-2';
+                        compPitchStatus.textContent = '● Transitioning';
+                    }
+                    if (compTuningStatus) {
+                        compTuningStatus.textContent = `Transition (${cleanTeacherSwara} ↔ ${studentSwara})`;
+                    }
+                    if (compHudMessage) {
+                        compHudMessage.textContent = `Transitioning notes (${cleanTeacherSwara}). Steady your voice on ${cleanTeacherSwara}.`;
+                    }
+                } else {
+                    // Persistent mismatch debouncing (130ms hysteresis)
+                    const now = performance.now();
+                    if (guidedMismatchStartTime === null) {
+                        guidedMismatchStartTime = now;
+                    }
+                    const mismatchElapsed = now - guidedMismatchStartTime;
+                    if (mismatchElapsed < GUIDED_MISMATCH_THRESHOLD_MS) {
+                        if (compPitchStatus) {
+                            compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                            compPitchStatus.textContent = '● Verifying...';
+                        }
+                        if (compTuningStatus) compTuningStatus.textContent = 'Aligning note...';
+                    } else {
+                        if (compTuningStatus) compTuningStatus.textContent = `Expected ${cleanTeacherSwara}, sang ${studentSwara}`;
+                        if (compPitchStatus) {
+                            compPitchStatus.className = 'badge bg-danger px-3 py-2';
+                            compPitchStatus.textContent = '● Wrong Note';
+                        }
+                        if (compHudMessage) compHudMessage.textContent = `Pitch off target. Focus on singing ${cleanTeacherSwara}.`;
+                    }
+                }
+            }
+        }
+
+        function stopLiveComparisonSession() {
+            if (!isComparing) return;
+            isComparing = false;
+
+            if (teacherAudio && !teacherAudio.paused) {
+                teacherAudio.pause();
+            }
+
+            selfPacedDwellStartTime = null;
+            selfPacedLastMatchTime = null;
+            selfPacedMismatchStartTime = null;
+            selfPacedAdvancementTime = null;
+            selfPacedValidHoldMs = 0;
+            guidedMismatchStartTime = null;
+            lastSelfPacedDiagState = '';
+            clearExpectedSwaraHighlights();
+
+            if (startCompBtn) startCompBtn.style.display = 'inline-block';
+            if (stopCompBtn) stopCompBtn.style.display = 'none';
+
+            let matchPct = 0;
+            let avgDev = 0;
+            let feedback = '';
+
+            if (!isGuidedModeActive) {
+                // Self-paced summary
+                const matched = selfPacedStats.matchedNotes;
+                const total = parsedExpectedSwaras.length;
+                if (total > 0) {
+                    matchPct = (matched / total) * 100;
+                    if (matchPct > 100) matchPct = 100;
+                }
+                if (selfPacedStats.deviationSamples > 0) {
+                    avgDev = selfPacedStats.sumDeviationCents / selfPacedStats.deviationSamples;
+                }
+
+                if (matched === total && total > 0) {
+                    feedback = '🌟 Outstanding! You completed the full swara sequence at your own pace with accurate pitch.';
+                } else if (matched > 0) {
+                    feedback = `👍 Good effort! You completed ${matched} of ${total} swaras. Practice holding each note steadily.`;
+                } else {
+                    feedback = '🎧 Keep practicing. Focus on matching each swara in order.';
+                }
+
+                if (compControlStatus) compControlStatus.textContent = 'Self-paced practice finished. Review your summary below.';
+            } else {
+                // Guided summary
+                const voicedTeacher = guidedStats.voicedTeacherFrames;
+                const matched = guidedStats.matchedSwaraFrames;
+                const devSamples = guidedStats.deviationSamples;
+
+                if (voicedTeacher > 0) {
+                    matchPct = (matched / voicedTeacher) * 100;
+                    if (matchPct > 100) matchPct = 100;
+                }
+                if (devSamples > 0) {
+                    avgDev = guidedStats.sumDeviationCents / devSamples;
+                }
+
+                if (voicedTeacher === 0) {
+                    feedback = 'Comparison ended before teacher audio voiced notes began.';
+                } else if (matchPct >= 80) {
+                    feedback = '🌟 Excellent performance! Your swara alignment and pitch were consistent with the teacher.';
+                } else if (matchPct >= 50) {
+                    feedback = '👍 Good effort! Practice holding each swara steadily to improve accuracy.';
+                } else {
+                    feedback = '🎧 Keep practicing. Listen carefully to the teacher recording and sing along with steady shruti.';
+                }
+
+                if (compControlStatus) compControlStatus.textContent = 'Guided comparison finished. Review your summary below.';
+            }
+
+            if (compSummaryMatch) compSummaryMatch.textContent = matchPct.toFixed(1) + '%';
+            if (compSummaryDev) compSummaryDev.textContent = avgDev.toFixed(0) + ' cents';
+            if (compSummaryFeedback) compSummaryFeedback.textContent = feedback;
+
+            if (compPitchStatus) {
+                compPitchStatus.className = 'badge bg-secondary px-3 py-2';
+                compPitchStatus.textContent = '● Completed';
+            }
+            if (compHudMessage) {
+                compHudMessage.textContent = 'Session complete. Review your summary below or click "Start Live Comparison" to try again.';
+            }
+            if (compTargetSub) compTargetSub.textContent = 'Session ended';
+            if (compStudentSub) compStudentSub.textContent = 'Session ended';
+
+            if (compSummaryPanel) compSummaryPanel.style.display = 'block';
+        }
+
+        if (startCompBtn) {
+            startCompBtn.addEventListener('click', async function() {
+                const isGuided = playRefAudioToggle && playRefAudioToggle.checked;
+
+                if (!isGuided) {
+                    // Self-paced mode requires a valid expected sequence
+                    if (!parsedExpectedSwaras || parsedExpectedSwaras.length === 0) {
+                        alert('This lesson does not have an expected swara sequence for self-paced practice. Please check "Play Reference Audio" to use guided comparison, or ask your teacher to add the sequence.');
+                        if (compControlStatus) {
+                            compControlStatus.textContent = 'Cannot start self-paced comparison: no expected swara sequence found.';
+                        }
+                        return;
+                    }
+                } else {
+                    // Guided mode requires reference audio and analysis
+                    if (!teacherReferenceData || !teacherReferenceData.frames) {
+                        alert('Teacher reference swara data is still loading or not ready. Please wait a moment.');
+                        return;
+                    }
+                    if (!teacherAudio) {
+                        alert('Teacher reference audio recording not found.');
+                        return;
+                    }
+                }
+
+                // Reset previous summary
+                if (compSummaryPanel) compSummaryPanel.style.display = 'none';
+
+                // Start shared microphone session if not already running
+                const micReady = await startMicrophoneSession();
+                if (!micReady) return;
+
+                isGuidedModeActive = isGuided;
+                isComparing = true;
+
+                startCompBtn.style.display = 'none';
+                if (stopCompBtn) stopCompBtn.style.display = 'inline-block';
+
+                if (!isGuided) {
+                    // Initialize Self-Paced Session
+                    selfPacedIndex = 0;
+                    selfPacedDwellStartTime = null;
+                    selfPacedLastMatchTime = null;
+                    selfPacedMismatchStartTime = null;
+                    selfPacedAdvancementTime = null;
+                    selfPacedValidHoldMs = 0;
+                    lastSelfPacedDiagLogTime = 0;
+                    lastSelfPacedDiagState = '';
+                    selfPacedStats = {
+                        matchedNotes: 0,
+                        totalNotes: parsedExpectedSwaras.length,
+                        sumDeviationCents: 0,
+                        deviationSamples: 0
+                    };
+
+                    if (teacherAudio && !teacherAudio.paused) {
+                        teacherAudio.pause();
+                    }
+
+                    highlightExpectedSwara(0);
+                    if (compControlStatus) compControlStatus.textContent = 'Self-paced practice active. Sing each swara in order at your own tempo!';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-primary px-3 py-2';
+                        compPitchStatus.textContent = '● Self-Paced';
+                    }
+                    if (compTargetSwara) compTargetSwara.textContent = parsedExpectedSwaras[0];
+                    if (compTargetSub) compTargetSub.textContent = `Note 1 of ${parsedExpectedSwaras.length}`;
+                    if (compHudMessage) {
+                        compHudMessage.textContent = `Sing ${parsedExpectedSwaras[0]} steadily to begin.`;
+                    }
+                } else {
+                    // Initialize Guided Session
+                    clearExpectedSwaraHighlights();
+                    guidedStats = {
+                        voicedTeacherFrames: 0,
+                        matchedSwaraFrames: 0,
+                        sumDeviationCents: 0,
+                        deviationSamples: 0
+                    };
+                    guidedMismatchStartTime = null;
+
+                    if (compControlStatus) compControlStatus.textContent = 'Guided comparison in progress... Sing along with the recording!';
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-primary px-3 py-2';
+                        compPitchStatus.textContent = '● Guided';
+                    }
+                    if (compHudMessage) {
+                        compHudMessage.textContent = 'Audio playing. Listen and sing each swara steadily.';
+                    }
+
+                    // Play teacher audio from start
+                    teacherAudio.currentTime = 0;
+                    try {
+                        await teacherAudio.play();
+                    } catch (playErr) {
+                        console.warn('Teacher audio play error:', playErr);
+                        alert('Could not start teacher reference audio: ' + playErr.message);
+                        stopLiveComparisonSession();
+                    }
+                }
+            });
+        }
+
+        if (stopCompBtn) {
+            stopCompBtn.addEventListener('click', function() {
+                stopLiveComparisonSession();
+            });
+        }
+
+        if (teacherAudio) {
+            teacherAudio.addEventListener('ended', function() {
+                if (isComparing && isGuidedModeActive) {
+                    stopLiveComparisonSession();
+                }
+            });
+            teacherAudio.addEventListener('pause', function() {
+                if (isComparing && isGuidedModeActive && !teacherAudio.ended) {
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-warning text-dark px-3 py-2';
+                        compPitchStatus.textContent = '● Audio Paused';
+                    }
+                    if (compHudMessage) {
+                        compHudMessage.textContent = 'Reference audio paused. Resume audio or click Stop Comparison.';
+                    }
+                }
+            });
+            teacherAudio.addEventListener('play', function() {
+                if (isComparing && isGuidedModeActive) {
+                    if (compPitchStatus) {
+                        compPitchStatus.className = 'badge bg-success px-3 py-2';
+                        compPitchStatus.textContent = '● Guided';
+                    }
+                }
+            });
+        }
+
+        async function loadTeacherReferenceData() {
+            if (!compBadge || !compMsg) return;
+
+            try {
+                const response = await fetch(liveCompEndpoint, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    let errMsg = 'Failed to load teacher reference data.';
+                    try {
+                        const errData = await response.json();
+                        if (errData && errData.error) {
+                            errMsg = errData.error;
+                        }
+                    } catch (e) {
+                        if (response.status === 404) {
+                            errMsg = 'Teacher reference swara analysis is not available for this lesson.';
+                        } else if (response.status === 403) {
+                            errMsg = 'You are not authorized to access this lesson reference data.';
+                        } else {
+                            errMsg = `Server error (${response.status}).`;
+                        }
+                    }
+                    throw new Error(errMsg);
+                }
+
+                const data = await response.json();
+
+                // Validate payload and frames
+                if (!data || !Array.isArray(data.frames)) {
+                    throw new Error('Invalid or incomplete swara analysis data received.');
+                }
+
+                teacherReferenceData = data;
+
+                // Safely count voiced frames handling nulls
+                const totalFrames = data.frames.length;
+                const voicedFrames = data.frames.filter(f => f && f.frequency !== null && f.frequency > 0 && f.swara).length;
+
+                // Update UI status
+                compBadge.className = 'badge bg-success';
+                compBadge.innerHTML = '● Reference Data Ready';
+                compMsg.textContent = 'Teacher reference data loaded successfully.';
+
+                // Populate metadata values
+                if (compMetadataPanel) {
+                    const metaShruti = document.getElementById('live-comp-meta-shruti');
+                    const metaTonic = document.getElementById('live-comp-meta-tonic-freq');
+                    const metaDuration = document.getElementById('live-comp-meta-duration');
+                    const metaFrames = document.getElementById('live-comp-meta-frames');
+
+                    if (metaShruti) metaShruti.textContent = data.shruti || '--';
+                    if (metaTonic) metaTonic.textContent = data.tonic_frequency ? `${Number(data.tonic_frequency).toFixed(1)} Hz` : '--';
+                    if (metaDuration) {
+                        if (data.audio_duration) {
+                            const mins = Math.floor(data.audio_duration / 60);
+                            const secs = Math.floor(data.audio_duration % 60);
+                            metaDuration.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                        } else {
+                            metaDuration.textContent = '--';
+                        }
+                    }
+                    if (metaFrames) {
+                        metaFrames.textContent = `${voicedFrames} voiced / ${totalFrames} total`;
+                    }
+                    compMetadataPanel.style.display = 'block';
+                }
+
+                if (compErrorCard) compErrorCard.style.display = 'none';
+
+            } catch (err) {
+                console.warn('Live comparison reference data load error:', err.message);
+                if (compBadge) {
+                    compBadge.className = 'badge bg-warning text-dark';
+                    compBadge.textContent = 'Reference Unavailable';
+                }
+                if (compMsg) {
+                    compMsg.textContent = 'Live comparison is currently unavailable for this lesson.';
+                }
+                if (compMetadataPanel) {
+                    compMetadataPanel.style.display = 'none';
+                }
+                if (compErrorCard && compErrorText) {
+                    compErrorText.textContent = err.message;
+                    compErrorCard.style.display = 'block';
+                }
+            }
+        }
+
+        loadTeacherReferenceData();
     });
 </script>
 {% endif %}

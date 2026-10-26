@@ -1,6 +1,7 @@
 import os
+import json
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_from_directory, abort
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, send_from_directory, abort, jsonify
 from flask_login import login_required, current_user
 from app.utilities.decorators import role_required
 from app.models.lesson import Lesson
@@ -76,6 +77,46 @@ def student_lesson_details(lesson_id):
         abort(403)
     attempts = PracticeAttempt.query.filter_by(lesson_id=lesson.id, student_id=current_user.id).order_by(PracticeAttempt.created_at.desc()).all()
     return render_template('dashboard/lesson_details.html', lesson=lesson, attempts=attempts, is_teacher=False)
+
+@dashboard_bp.route('/student/lessons/<int:lesson_id>/reference-swara-data', methods=['GET'])
+@login_required
+@role_required('student')
+def student_lesson_reference_swara_data(lesson_id):
+    lesson = Lesson.query.get_or_404(lesson_id)
+    teacher_ids = [t.id for t in current_user.teachers]
+    if lesson.teacher_id not in teacher_ids:
+        abort(403)
+
+    if not lesson.swara_data_filename or lesson.swara_analysis_status != 'Ready':
+        return jsonify({'error': 'Teacher reference swara analysis is not available for this lesson.'}), 404
+
+    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], lesson.swara_data_filename)
+    if not os.path.exists(file_path):
+        return jsonify({'error': 'Teacher reference swara analysis file not found.'}), 404
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            swara_data = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        current_app.logger.error(f"Error reading swara analysis file for lesson {lesson.id}: {e}")
+        return jsonify({'error': 'Failed to read reference swara data.'}), 500
+
+    frames = swara_data.get('frames', [])
+    response_data = {
+        'lesson_id': lesson.id,
+        'title': lesson.title,
+        'raga': lesson.raga,
+        'shruti': lesson.shruti,
+        'tala': lesson.tala,
+        'laya': lesson.laya,
+        'expected_swara_sequence': lesson.expected_swara_sequence,
+        'audio_duration': lesson.audio_duration,
+        'tonic_frequency': swara_data.get('tonic_frequency') or lesson.tonic_frequency,
+        'analysis_sample_rate': swara_data.get('analysis_sample_rate', 22050),
+        'total_frames': len(frames),
+        'frames': frames
+    }
+    return jsonify(response_data), 200
 
 @dashboard_bp.route('/teacher')
 @login_required
